@@ -1,0 +1,3743 @@
+ОТЧЕТ О ФАЙЛАХ
+Папка: /OTPUSK/otpusk-app/src/components
+Дата создания: 10/10/2025, 9:45:33 PM
+Всего файлов: 27
+================================================================================
+
+
+================================================================================
+ФАЙЛ: CTASection.js
+ПОЛНЫЙ ПУТЬ: src/components/CTASection.js
+РАЗМЕР: 1747 символов
+================================================================================
+
+// src/components/CTASection.js
+import Link from 'next/link';
+
+export default function CTASection() {
+  return (
+    <section className="py-20 bg-gradient-to-r from-blue-600 to-cyan-500">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          Готовы начать путешествие?
+        </h2>
+        <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto">
+          Присоединяйтесь к тысячам путешественников, которые уже создают 
+          незабываемые воспоминания с Vacation Social
+        </p>
+        
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link 
+            href="/registration" 
+            className="bg-white text-blue-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-50 transition duration-200 shadow-2xl hover:shadow-3xl transform hover:-translate-y-1 inline-flex items-center justify-center"
+          >
+            Создать аккаунт бесплатно
+            <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </Link>
+          
+          <Link 
+            href="/features" 
+            className="border border-white text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:bg-opacity-10 transition duration-200 inline-flex items-center justify-center"
+          >
+            Узнать больше
+          </Link>
+        </div>
+        
+        <p className="mt-6 text-blue-200 text-sm">
+          Без кредитной карты • Бесплатно навсегда
+        </p>
+      </div>
+    </section>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: FeaturesSection.js
+ПОЛНЫЙ ПУТЬ: src/components/FeaturesSection.js
+РАЗМЕР: 4372 символов
+================================================================================
+
+// src/components/FeaturesSection.js
+export default function FeaturesSection() {
+  const features = [
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      title: "Таймер отпуска",
+      description: "Отслеживайте время до начала путешествия с красивым таймером"
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+      ),
+      title: "Планирование маршрута",
+      description: "Создавайте детальные планы походов с картами и расписанием"
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      title: "Воспоминания",
+      description: "Делитесь фотографиями и историями из ваших путешествий"
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      title: "Сообщество",
+      description: "Находите попутчиков и делитесь опытом с другими путешественниками"
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+        </svg>
+      ),
+      title: "Умный календарь",
+      description: "Планируйте активности на красивой временной шкале"
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ),
+      title: "Безопасность",
+      description: "Ваши данные защищены и доступны только вам и вашим друзьям"
+    }
+  ];
+
+  return (
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+            Все для идеального отпуска
+          </h2>
+          <p className="mt-4 text-xl text-gray-600 max-w-3xl mx-auto">
+            От планирования до воспоминаний - все инструменты в одном месте
+          </p>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {features.map((feature, index) => (
+            <div 
+              key={index}
+              className="bg-gradient-to-br from-white to-blue-50 p-6 rounded-2xl shadow-lg hover:shadow-xl transition duration-300 border border-blue-100"
+            >
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-400 rounded-lg flex items-center justify-center text-white mb-4">
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600">
+                {feature.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: Footer.js
+ПОЛНЫЙ ПУТЬ: src/components/Footer.js
+РАЗМЕР: 1179 символов
+================================================================================
+
+// src/components/Footer.js
+import Link from 'next/link';
+
+export default function Footer() {
+  return (
+    <footer className="bg-gray-900 text-white py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-2">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">BW</span>
+              </div>
+              <span className="text-xl font-bold">Breezeway</span>
+            </div>
+            <p className="text-gray-400 max-w-md">
+              Платформа для планирования отпусков вместе с друзьями. 
+              Создавайте воспоминания, делитесь моментами, находите попутчиков.
+            </p>
+          </div>
+        </div>
+        
+        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+          <p>&copy; 2024 Breezeway. Бесплатная платформа для путешественников.</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: GuestRoute.js
+ПОЛНЫЙ ПУТЬ: src/components/GuestRoute.js
+РАЗМЕР: 1251 символов
+================================================================================
+
+// src/components/GuestRoute.js
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext';
+
+export default function GuestRoute({ children }) {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      // Если пользователь авторизован, перенаправляем на главную
+      router.push('/my-vacations');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-emerald-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Проверка авторизации...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-emerald-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Перенаправление...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+}
+
+
+
+================================================================================
+ФАЙЛ: Header.js
+ПОЛНЫЙ ПУТЬ: src/components/Header.js
+РАЗМЕР: 11477 символов
+================================================================================
+
+// src/components/Header.js
+'use client';
+
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import NotificationCenter from './NotificationCenter';
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { user, isLoading, logout } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await fetch('/api/notifications', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const notifications = await response.json();
+        const unread = notifications.filter(n => !n.isRead).length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки уведомлений:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMenuOpen(false);
+  };
+
+  if (isLoading) {
+    return (
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="ml-2 w-24 h-6 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="flex space-x-4">
+              <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  const isLoggedIn = !!user;
+
+  return (
+    <>
+      <header className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Логотип */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">BW</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                  Breezeway
+                </span>
+              </Link>
+            </div>
+
+            {/* Навигация для десктопа */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/features" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                Возможности
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                О нас
+              </Link>
+              <Link href="/community" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                Сообщество
+              </Link>
+            </nav>
+
+            {/* Кнопки для десктопа */}
+            <div className="hidden md:flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
+                  {/* Центр уведомлений */}
+                  <button 
+                    onClick={() => setIsNotificationOpen(true)}
+                    className="relative p-2 text-gray-600 hover:text-emerald-600 transition duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <Link 
+                    href="/my-vacations" 
+                    className="text-emerald-600 hover:text-emerald-700 font-medium transition duration-200"
+                  >
+                    Мои отпуски
+                  </Link>
+                  <Link 
+                    href="/profile" 
+                    className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-2 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    {user?.name || 'Профиль'}
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-red-600 font-medium transition duration-200"
+                  >
+                    Выйти
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/login" 
+                    className="text-emerald-600 hover:text-emerald-700 font-medium transition duration-200"
+                  >
+                    Вход
+                  </Link>
+                  <Link 
+                    href="/registration" 
+                    className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-2 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    Начать бесплатно
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Кнопка мобильного меню */}
+            <button 
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100 transition duration-200"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+
+          {/* Мобильное меню */}
+          {isMenuOpen && (
+            <div className="md:hidden py-4 border-t border-gray-200 bg-white">
+              <div className="flex flex-col space-y-4">
+                <Link 
+                  href="/features" 
+                  className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Возможности
+                </Link>
+                <Link 
+                  href="/about" 
+                  className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  О нас
+                </Link>
+                <Link 
+                  href="/community" 
+                  className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Сообщество
+                </Link>
+                
+                <div className="pt-4 border-t border-gray-200 space-y-3">
+                  {isLoggedIn ? (
+                    <>
+                      <button 
+                        onClick={() => {
+                          setIsNotificationOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                        className="flex items-center space-x-2 text-gray-600 hover:text-emerald-600 transition duration-200 py-2 w-full text-left"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                        </svg>
+                        <span>Уведомления</span>
+                        {unreadCount > 0 && (
+                          <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <Link 
+                        href="/my-vacations" 
+                        className="block text-emerald-600 hover:text-emerald-700 font-medium transition duration-200 py-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Мои отпуски
+                      </Link>
+                      <Link 
+                        href="/profile" 
+                        className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {user?.name || 'Профиль'}
+                      </Link>
+                      <button 
+                        onClick={handleLogout}
+                        className="block w-full text-gray-600 hover:text-red-600 text-center font-medium transition duration-200 py-2"
+                      >
+                        Выйти
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link 
+                        href="/login" 
+                        className="block text-emerald-600 hover:text-emerald-700 font-medium transition duration-200 py-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Вход
+                      </Link>
+                      <Link 
+                        href="/registration" 
+                        className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Начать бесплатно
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Центр уведомлений */}
+      <NotificationCenter 
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        onUpdate={fetchUnreadCount}
+      />
+    </>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: Header.jsssss
+ПОЛНЫЙ ПУТЬ: src/components/Header.jsssss
+РАЗМЕР: 11536 символов
+================================================================================
+
+// src/components/Header.js
+'use client';
+
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import NotificationCenter from './NotificationCenter';
+
+export default function Header() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { user, isLoading, logout } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await fetch('/api/notifications', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const notifications = await response.json();
+        const unread = notifications.filter(n => !n.isRead).length;
+        setUnreadCount(unread);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки уведомлений:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMenuOpen(false);
+  };
+
+  if (isLoading) {
+    return (
+      <header className="bg-white shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="ml-2 w-24 h-6 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="flex space-x-4">
+              <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  const isLoggedIn = !!user;
+
+  return (
+    <>
+      <header className="bg-white shadow-sm sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Логотип */}
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-400 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">BW</span>
+                </div>
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                  Breezeway
+                </span>
+              </Link>
+            </div>
+
+            {/* Навигация для десктопа */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <Link href="/features" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                Возможности
+              </Link>
+              <Link href="/about" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                О нас
+              </Link>
+              <Link href="/community" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                Сообщество
+              </Link>
+            </nav>
+
+            {/* Кнопки для десктопа */}
+            <div className="hidden md:flex items-center space-x-4">
+              {isLoggedIn ? (
+                <>
+                  {/* Центр уведомлений */}
+                  <button 
+                    onClick={() => setIsNotificationOpen(true)}
+                    className="relative p-2 text-gray-600 hover:text-emerald-600 transition duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <Link 
+                    href="/my-vacations" 
+                    className="text-emerald-600 hover:text-emerald-700 font-medium transition duration-200"
+                  >
+                    Мои отпуски
+                  </Link>
+                  <Link 
+                    href="/profile" 
+                    className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-2 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    {user?.name || 'Профиль'}
+                  </Link>
+                  <button 
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-red-600 font-medium transition duration-200"
+                  >
+                    Выйти
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link 
+                    href="/login" 
+                    className="text-emerald-600 hover:text-emerald-700 font-medium transition duration-200"
+                  >
+                    Вход
+                  </Link>
+                  <Link 
+                    href="/registration" 
+                    className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-2 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    Начать бесплатно
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Кнопка мобильного меню */}
+            <button 
+              className="md:hidden p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100 transition duration-200"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+
+          {/* Мобильное меню */}
+          {isMenuOpen && (
+            <div className="md:hidden py-4 border-t border-gray-200 bg-white">
+              <div className="flex flex-col space-y-4">
+                <Link 
+                  href="/features" 
+                  className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Возможности
+                </Link>
+                <Link 
+                  href="/about" 
+                  className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  О нас
+                </Link>
+                <Link 
+                  href="/community" 
+                  className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Сообщество
+                </Link>
+                
+                <div className="pt-4 border-t border-gray-200 space-y-3">
+                  {isLoggedIn ? (
+                    <>
+                      {/* Уведомления в мобильном меню */}
+                      <button 
+                        onClick={() => {
+                          setIsNotificationOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                        className="flex items-center space-x-2 text-gray-600 hover:text-emerald-600 transition duration-200 py-2 w-full text-left"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                        </svg>
+                        <span>Уведомления</span>
+                        {unreadCount > 0 && (
+                          <span className="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </button>
+
+                      <Link 
+                        href="/my-vacations" 
+                        className="block text-emerald-600 hover:text-emerald-700 font-medium transition duration-200 py-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Мои отпуски
+                      </Link>
+                      <Link 
+                        href="/profile" 
+                        className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {user?.name || 'Профиль'}
+                      </Link>
+                      <button 
+                        onClick={handleLogout}
+                        className="block w-full text-gray-600 hover:text-red-600 text-center font-medium transition duration-200 py-2"
+                      >
+                        Выйти
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link 
+                        href="/login" 
+                        className="block text-emerald-600 hover:text-emerald-700 font-medium transition duration-200 py-2"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Вход
+                      </Link>
+                      <Link 
+                        href="/registration" 
+                        className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Начать бесплатно
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* Центр уведомлений */}
+      <NotificationCenter 
+        isOpen={isNotificationOpen}
+        onClose={() => setIsNotificationOpen(false)}
+        onUpdate={fetchUnreadCount}
+      />
+    </>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: HeroSection.js
+ПОЛНЫЙ ПУТЬ: src/components/HeroSection.js
+РАЗМЕР: 6197 символов
+================================================================================
+
+// src/components/HeroSection.js
+import Link from 'next/link';
+
+export default function HeroSection() {
+  return (
+    <section className="relative bg-gradient-to-br from-emerald-50 via-white to-teal-50 overflow-hidden">
+      {/* Фоновые элементы */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmMWY1ZjkiIGZpbGwtb3BhY2l0eT0iMC40Ij48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-50"></div>
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Текстовая часть */}
+          <div className="text-center lg:text-left">
+            {/* Бесплатный бейдж */}
+            <div className="inline-flex items-center space-x-2 bg-white text-emerald-700 px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-6">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+              <span>Никаких тарифов • Полностью бесплатно</span>
+            </div>
+
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              Планируйте отпуск
+              <span className="block bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">
+                вместе с друзьями
+              </span>
+            </h1>
+            
+            <p className="mt-6 text-xl text-gray-600 max-w-2xl">
+              Создавайте незабываемые путешествия, делитесь моментами и находите новых 
+              попутчиков. Полностью бесплатно, навсегда.
+            </p>
+
+            {/* CTA кнопки */}
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Link 
+                href="/registration" 
+                className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 inline-flex items-center justify-center"
+              >
+                Начать бесплатно
+                <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+              
+              <Link 
+                href="/features" 
+                className="border border-gray-300 text-gray-700 px-8 py-4 rounded-full text-lg font-semibold hover:border-emerald-400 hover:text-emerald-600 transition duration-200 inline-flex items-center justify-center"
+              >
+                <svg className="mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Смотреть возможности
+              </Link>
+            </div>
+
+            {/* Гарантия бесплатности */}
+            <div className="mt-8 flex items-center justify-center lg:justify-start space-x-4 text-sm text-gray-500">
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Без подписок</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Без ограничений</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <svg className="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span>Навсегда</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Изображение героя */}
+          <div className="relative">
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <div className="bg-gradient-to-br from-emerald-400 to-teal-300 aspect-[4/3] rounded-2xl flex items-center justify-center">
+                <div className="text-white text-center p-8">
+                  <svg className="w-24 h-24 mx-auto mb-4 opacity-80" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clipRule="evenodd" />
+                  </svg>
+                  <p className="text-xl font-semibold">Breezeway</p>
+                  <p className="text-emerald-100 mt-2">Планируйте отпуска бесплатно</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: Notification.js
+ПОЛНЫЙ ПУТЬ: src/components/Notification.js
+РАЗМЕР: 2746 символов
+================================================================================
+
+// src/components/Notification.js
+'use client';
+
+import { useEffect } from 'react';
+
+export default function Notification({ message, type = 'error', onClose }) {
+  useEffect(() => {
+    if (message) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [message, onClose]);
+
+  if (!message) return null;
+
+  const styles = {
+    error: 'bg-red-50 border-red-200 text-red-600',
+    success: 'bg-green-50 border-green-200 text-green-600',
+    warning: 'bg-yellow-50 border-yellow-200 text-yellow-600',
+    info: 'bg-blue-50 border-blue-200 text-blue-600'
+  };
+
+  const icons = {
+    error: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+      </svg>
+    ),
+    success: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+      </svg>
+    ),
+    warning: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+      </svg>
+    ),
+    info: (
+      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+      </svg>
+    )
+  };
+
+  return (
+    <div className={`fixed top-4 right-4 border rounded-lg p-4 shadow-lg z-50 max-w-sm ${styles[type]}`}>
+      <div className="flex items-start space-x-3">
+        <div className="flex-shrink-0">
+          {icons[type]}
+        </div>
+        <div className="flex-1">
+          <p className="text-sm font-medium">{message}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="flex-shrink-0 hover:opacity-70 transition-opacity"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: NotificationCenter.js
+ПОЛНЫЙ ПУТЬ: src/components/NotificationCenter.js
+РАЗМЕР: 7720 символов
+================================================================================
+
+// src/components/NotificationCenter.js
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import NotificationFactory from './notifications/NotificationFactory';
+
+export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/notifications', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки уведомлений:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const markAsRead = async (notificationId = null) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          notificationIds: notificationId ? [notificationId] : null
+        }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        fetchNotifications();
+        onUpdate?.();
+      }
+    } catch (error) {
+      console.error('Ошибка обновления уведомлений:', error);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  return (
+    <div className="fixed inset-0 z-[9999]">
+      <div className="flex items-center justify-center h-full">
+        {/* Мобильная версия */}
+        <div className="md:hidden w-full h-full bg-white flex flex-col">
+          <Header 
+            unreadCount={unreadCount} 
+            onMarkAllAsRead={() => markAsRead()} 
+            onClose={onClose}
+            isMobile={true}
+          />
+          <NotificationContent 
+            isLoading={isLoading}
+            notifications={notifications}
+            markAsRead={markAsRead}
+            fetchNotifications={fetchNotifications}
+          />
+        </div>
+
+        {/* Десктоп версия */}
+        <div className="hidden md:block w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 mx-4">
+          <div className="flex flex-col h-full">
+            <Header 
+              unreadCount={unreadCount} 
+              onMarkAllAsRead={() => markAsRead()} 
+              onClose={onClose}
+              isMobile={false}
+            />
+            
+            <div className="flex-1 overflow-y-auto">
+              <NotificationContent 
+                isLoading={isLoading}
+                notifications={notifications}
+                markAsRead={markAsRead}
+                fetchNotifications={fetchNotifications}
+              />
+            </div>
+
+            <Footer onClose={onClose} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Вынесем компоненты для чистоты кода
+function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
+  return (
+    <div className={`flex items-center justify-between ${isMobile ? 'p-4 border-b border-gray-200' : 'p-6 border-b border-gray-200 rounded-t-2xl'}`}>
+      <div className="flex items-center space-x-3">
+        {isMobile && (
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+        <div className="flex items-center space-x-3">
+          {!isMobile && (
+            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+              </svg>
+            </div>
+          )}
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Уведомления</h2>
+            {unreadCount > 0 && (
+              <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex items-center space-x-3">
+        {unreadCount > 0 && (
+          <button
+            onClick={onMarkAllAsRead}
+            className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50"
+          >
+            Прочитать все
+          </button>
+        )}
+        {!isMobile && (
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Footer({ onClose }) {
+  return (
+    <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+      <Link
+        href="/notifications"
+        className="block w-full text-center bg-white text-gray-700 py-3 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300"
+        onClick={onClose}
+      >
+        Все уведомления
+      </Link>
+    </div>
+  );
+}
+
+function NotificationContent({ isLoading, notifications, markAsRead, fetchNotifications }) {
+  if (isLoading) {
+    return (
+      <div className="space-y-4 p-6">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="animate-pulse">
+            <div className="flex space-x-3">
+              <div className="w-2 h-2 bg-gray-200 rounded-full mt-3"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (notifications.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-8">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <svg className="w-10 h-10 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Нет уведомлений</h3>
+        <p className="text-center text-gray-600">Здесь появятся ваши уведомления</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-3">
+      {notifications.map((notification) => (
+        <NotificationFactory
+          key={notification.id}
+          notification={notification}
+          onMarkAsRead={markAsRead}
+          onUpdate={fetchNotifications}
+        />
+      ))}
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: NotificationCenter.jss
+ПОЛНЫЙ ПУТЬ: src/components/NotificationCenter.jss
+РАЗМЕР: 14569 символов
+================================================================================
+
+// src/components/NotificationCenter.js
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications();
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/notifications', {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки уведомлений:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const markAsRead = async (notificationId = null) => {
+    try {
+      const response = await fetch('/api/notifications', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          notificationIds: notificationId ? [notificationId] : null
+        }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        fetchNotifications();
+        onUpdate?.();
+      }
+    } catch (error) {
+      console.error('Ошибка обновления уведомлений:', error);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  return (
+    <div className="fixed inset-0 z-100">
+      {/* На мобильных - на весь экран, на ПК - по центру */}
+      <div className="flex items-center justify-center h-full">
+        {/* Мобильная версия - на весь экран */}
+        <div className="md:hidden w-full h-full bg-white flex flex-col">
+          {/* Заголовок */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Уведомления</h2>
+                {unreadCount > 0 && (
+                  <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={() => markAsRead()}
+                  className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  Прочитать все
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Контент */}
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="space-y-4 p-4">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="flex space-x-3">
+                      <div className="w-2 h-2 bg-gray-200 rounded-full mt-3"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-200 rounded w-full"></div>
+                        <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 p-8">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <svg className="w-10 h-10 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Нет уведомлений</h3>
+                <p className="text-center text-gray-600">Здесь появятся ваши приглашения и уведомления</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-3">
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`p-4 rounded-xl border transition-all duration-200 ${
+                      !notification.isRead 
+                        ? 'bg-blue-50 border-blue-200' 
+                        : 'bg-white border-gray-200 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                        !notification.isRead ? 'bg-blue-500' : 'bg-gray-400'
+                      }`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="text-sm font-semibold text-gray-900">
+                            {notification.title}
+                          </h3>
+                          <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                            {new Date(notification.createdAt).toLocaleDateString('ru-RU')}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-3">
+                          {notification.message}
+                        </p>
+                        {notification.type === 'invitation' && !notification.isRead && (
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => markAsRead(notification.id)}
+                              className="flex-1 bg-emerald-500 text-white px-4 py-3 rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+                            >
+                              Принять приглашение
+                            </button>
+                            <button
+                              onClick={() => markAsRead(notification.id)}
+                              className="flex-1 bg-gray-300 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                            >
+                              Отклонить
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Десктоп версия - модальное окно */}
+        <div className="hidden md:block w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 mx-4">
+          <div className="flex flex-col h-full">
+            {/* Заголовок */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white rounded-t-2xl">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Уведомления</h2>
+                  {unreadCount > 0 && (
+                    <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={() => markAsRead()}
+                    className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    Прочитать все
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Контент */}
+            <div className="flex-1 overflow-y-auto">
+              {isLoading ? (
+                <div className="space-y-4 p-6">
+                  {[...Array(6)].map((_, i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="flex space-x-3">
+                        <div className="w-2 h-2 bg-gray-200 rounded-full mt-3"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-200 rounded w-full"></div>
+                          <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-8">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-10 h-10 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Нет уведомлений</h3>
+                  <p className="text-center text-gray-600">Здесь появятся ваши приглашения и уведомления</p>
+                </div>
+              ) : (
+                <div className="p-4 space-y-3">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-4 rounded-xl border transition-all duration-200 ${
+                        !notification.isRead 
+                          ? 'bg-blue-50 border-blue-200' 
+                          : 'bg-white border-gray-200 hover:shadow-md'
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${
+                          !notification.isRead ? 'bg-blue-500' : 'bg-gray-400'
+                        }`} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between mb-2">
+                            <h3 className="text-sm font-semibold text-gray-900">
+                              {notification.title}
+                            </h3>
+                            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                              {new Date(notification.createdAt).toLocaleDateString('ru-RU')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-3">
+                            {notification.message}
+                          </p>
+                          {notification.type === 'invitation' && !notification.isRead && (
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => markAsRead(notification.id)}
+                                className="text-sm bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition-colors font-medium"
+                              >
+                                Принять
+                              </button>
+                              <button
+                                onClick={() => markAsRead(notification.id)}
+                                className="text-sm bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium"
+                              >
+                                Отклонить
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Футер */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Link
+                href="/notifications"
+                className="block w-full text-center bg-white text-gray-700 py-3 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium border border-gray-300"
+                onClick={onClose}
+              >
+                Все уведомления
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: ProtectedRoute.js
+ПОЛНЫЙ ПУТЬ: src/components/ProtectedRoute.js
+РАЗМЕР: 1206 символов
+================================================================================
+
+// src/components/ProtectedRoute.js
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../contexts/AuthContext';
+
+export default function ProtectedRoute({ children }) {
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-emerald-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Проверка авторизации...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-t-4 border-emerald-500 border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Перенаправление на страницу входа...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return children;
+}
+
+
+
+================================================================================
+ФАЙЛ: RegistrationForm.js
+ПОЛНЫЙ ПУТЬ: src/components/RegistrationForm.js
+РАЗМЕР: 8750 символов
+================================================================================
+
+// src/components/RegistrationForm.js
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Notification from './Notification';
+
+export default function RegistrationForm() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [notification, setNotification] = useState({ message: '', type: '' });
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Имя обязательно';
+    } else if (formData.name.length < 2) {
+      newErrors.name = 'Имя должно содержать минимум 2 символа';
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email обязателен';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Некорректный формат email';
+    }
+
+    if (!formData.password) {
+      newErrors.password = 'Пароль обязателен';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Пароль должен содержать минимум 6 символов';
+    }
+
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Подтверждение пароля обязательно';
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Пароли не совпадают';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setNotification({ 
+          message: 'Регистрация прошла успешно! Перенаправляем...', 
+          type: 'success' 
+        });
+        
+        setTimeout(() => {
+          router.push('/my-vacations');
+        }, 1000);
+      } else {
+        setNotification({ 
+          message: data.message || 'Ошибка при регистрации', 
+          type: 'error' 
+        });
+      }
+    } catch (error) {
+      setNotification({ 
+        message: 'Ошибка сети. Попробуйте еще раз.', 
+        type: 'error' 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <Notification 
+        message={notification.message} 
+        type={notification.type}
+        onClose={() => setNotification({ message: '', type: '' })}
+      />
+
+      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            Создать аккаунт
+          </h2>
+          <p className="text-gray-600">
+            Начните планировать свои путешествия
+          </p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Поле имени */}
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              Имя
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                errors.name ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Введите ваше имя"
+            />
+            {errors.name && (
+              <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+            )}
+          </div>
+
+          {/* Поле email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                errors.email ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="your@email.com"
+            />
+            {errors.email && (
+              <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+            )}
+          </div>
+
+          {/* Поле пароля */}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              Пароль
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                errors.password ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Минимум 6 символов"
+            />
+            {errors.password && (
+              <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+            )}
+          </div>
+
+          {/* Подтверждение пароля */}
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              Подтвердите пароль
+            </label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Повторите пароль"
+            />
+            {errors.confirmPassword && (
+              <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
+            )}
+          </div>
+
+          {/* Кнопка отправки */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-emerald-700 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center">
+                <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin mr-2"></div>
+                Регистрация...
+              </div>
+            ) : (
+              'Создать аккаунт бесплатно'
+            )}
+          </button>
+
+          {/* Бесплатно навсегда */}
+          <div className="text-center">
+            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+              <span>Полностью бесплатно • Без ограничений</span>
+            </div>
+          </div>
+        </form>
+
+        <div className="mt-8 text-center">
+          <p className="text-gray-600">
+            Уже есть аккаунт?{' '}
+            <Link href="/login" className="text-emerald-600 hover:text-emerald-500 font-semibold transition duration-200">
+              Войдите
+            </Link>
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: TestNotif.js
+ПОЛНЫЙ ПУТЬ: src/components/TestNotif.js
+РАЗМЕР: 2072 символов
+================================================================================
+
+// components/NotificationTester.js
+'use client';
+import { useState } from 'react';
+
+export default function NotificationTester() {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const testNotifications = [
+    {
+      type: 'invitation',
+      title: 'Приглашение в отпуск',
+      message: 'Анна пригласила вас в отпуск "Отдых на Бали"',
+      buttonText: '📨 Тест приглашения'
+    },
+    {
+      type: 'activity_update', 
+      title: 'Обновление планов',
+      message: 'В вашем отпуске добавлена новая активность',
+      buttonText: '🔄 Тест обновления'
+    },
+    {
+      type: 'memory_comment',
+      title: 'Новый комментарий',
+      message: 'Иван прокомментировал ваше воспоминание',
+      buttonText: '💬 Тест комментария'
+    },
+    {
+      type: 'info',
+      title: 'Информационное уведомление',
+      message: 'Это тестовое информационное уведомление',
+      buttonText: 'ℹ️ Тест информации'
+    }
+  ];
+
+  const sendTest = async (type) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/notifications/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        console.log(`Тестовое уведомление "${type}" отправлено`);
+      }
+    } catch (error) {
+      console.error('Ошибка:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-lg font-semibold mb-4">Тестирование уведомлений</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {testNotifications.map((notification) => (
+          <button
+            key={notification.type}
+            onClick={() => sendTest(notification.type)}
+            disabled={isLoading}
+            className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-3 rounded-lg transition disabled:opacity-50"
+          >
+            {notification.buttonText}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: VacationCard.js
+ПОЛНЫЙ ПУТЬ: src/components/VacationCard.js
+РАЗМЕР: 8932 символов
+================================================================================
+
+// src/components/VacationCard.js
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+
+export default function VacationCard({ vacation }) {
+  const [imageError, setImageError] = useState(false);
+  
+  const calculateDaysLeft = (startDate) => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const diffTime = start - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const getStatusInfo = (startDate, endDate) => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const daysLeft = calculateDaysLeft(startDate);
+
+    if (today < start) {
+      return {
+        type: 'upcoming',
+        text: `Через ${daysLeft} д.`,
+        color: 'bg-blue-100 text-blue-800'
+      };
+    } else if (today >= start && today <= end) {
+      return {
+        type: 'current',
+        text: 'Сейчас',
+        color: 'bg-green-100 text-green-800'
+      };
+    } else {
+      return {
+        type: 'past',
+        text: 'Завершен',
+        color: 'bg-gray-100 text-gray-800'
+      };
+    }
+  };
+
+  const getVacationEmoji = (destination, status) => {
+    // Если есть место назначения, пытаемся определить тип по тексту
+    if (destination) {
+      const dest = destination.toLowerCase();
+      
+      // Пляжные направления
+      if (dest.includes('пляж') || dest.includes('море') || dest.includes('океан') || 
+          dest.includes('остров') || dest.includes('мальдив') || dest.includes('бали') ||
+          dest.includes('тайланд') || dest.includes('египет') || dest.includes('турция')) {
+        return '🏖️';
+      }
+      
+      // Горные направления
+      if (dest.includes('гор') || dest.includes('альп') || dest.includes('лыж') || 
+          dest.includes('снег') || dest.includes('шале')) {
+        return '🏔️';
+      }
+      
+      // Городские направления
+      if (dest.includes('париж') || dest.includes('рим') || dest.includes('барселон') ||
+          dest.includes('лондон') || dest.includes('берлин') || dest.includes('праг') ||
+          dest.includes('город') || dest.includes('столиц')) {
+        return '🏙️';
+      }
+      
+      // Природа и кемпинг
+      if (dest.includes('лес') || dest.includes('озер') || dest.includes('река') ||
+          dest.includes('кемпинг') || dest.includes('палатк') || dest.includes('поход')) {
+        return '⛺';
+      }
+      
+      // Культура и история
+      if (dest.includes('музей') || dest.includes('замок') || dest.includes('храм') ||
+          dest.includes('пирамид') || dest.includes('истори')) {
+        return '🏛️';
+      }
+    }
+
+    // Если не удалось определить по месту, используем статус
+    switch (status) {
+      case 'upcoming':
+        return '📅';
+      case 'current':
+        return '🎉';
+      case 'past':
+        return '📸';
+      default:
+        return '🌴'; // Пальма по умолчанию
+    }
+  };
+
+  const getCoverBackground = (status) => {
+    const gradients = {
+      upcoming: 'from-blue-400 to-cyan-500',
+      current: 'from-green-400 to-emerald-500',
+      past: 'from-purple-400 to-indigo-500'
+    };
+    
+    return gradients[status] || 'from-emerald-400 to-teal-500';
+  };
+
+  const statusInfo = getStatusInfo(vacation.startDate, vacation.endDate);
+  const vacationEmoji = getVacationEmoji(vacation.destination, statusInfo.type);
+  const coverBackground = getCoverBackground(statusInfo.type);
+
+  return (
+    <Link 
+      href={`/vacations/${vacation.id}`}
+      className="group block bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-emerald-200 transform hover:-translate-y-1"
+    >
+      {/* Изображение обложки */}
+      <div className={`relative h-48 bg-gradient-to-br ${coverBackground} overflow-hidden flex items-center justify-center`}>
+        {/* Эмодзи на всю карточку */}
+        <div className="text-6xl opacity-90 transform group-hover:scale-110 transition-transform duration-300">
+          {vacationEmoji}
+        </div>
+        
+        {/* Статус бадж */}
+        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium ${statusInfo.color} backdrop-blur-sm bg-white/20`}>
+          {statusInfo.text}
+        </div>
+        
+        {/* Градиент overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        
+        {/* Информация поверх изображения */}
+        <div className="absolute bottom-4 left-4 right-4 text-white">
+          <h3 className="text-xl font-semibold mb-1 line-clamp-1 drop-shadow-lg">
+            {vacation.title}
+          </h3>
+          {vacation.destination && (
+            <p className="text-sm opacity-90 line-clamp-1 drop-shadow-lg">
+              {vacation.destination}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Контент карточки */}
+      <div className="p-6">
+        {/* Даты */}
+        <div className="flex items-center text-gray-500 text-sm mb-4">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>{formatDate(vacation.startDate)} - {formatDate(vacation.endDate)}</span>
+        </div>
+
+        {/* Описание (если есть) */}
+        {vacation.description && (
+          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+            {vacation.description}
+          </p>
+        )}
+
+        {/* Статистика */}
+        <div className="flex justify-between items-center text-sm text-gray-500 border-t border-gray-100 pt-4">
+          <div className="flex space-x-4">
+            <div className="flex items-center space-x-1" title="Участники">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+              </svg>
+              <span>{vacation._count?.members || 0}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1" title="Планы">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span>{vacation._count?.activities || 0}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1" title="Воспоминания">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>{vacation._count?.memories || 0}</span>
+            </div>
+          </div>
+
+          {/* Владелец/участники */}
+          <div className="flex items-center">
+            {vacation.members?.slice(0, 3).map((member, index) => (
+              <div
+                key={member.user.id}
+                className={`w-6 h-6 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center text-white text-xs font-medium border-2 border-white ${
+                  index > 0 ? '-ml-2' : ''
+                }`}
+                title={member.user.name}
+              >
+                {member.user.avatar ? (
+                  <img
+                    src={member.user.avatar}
+                    alt={member.user.name}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  member.user.name.charAt(0).toUpperCase()
+                )}
+              </div>
+            ))}
+            {vacation.members?.length > 3 && (
+              <div 
+                className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 text-xs font-medium border-2 border-white -ml-2"
+                title={`Еще ${vacation.members.length - 3} участников`}
+              >
+                +{vacation.members.length - 3}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/BaseNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications/BaseNotification.js
+РАЗМЕР: 2303 символов
+================================================================================
+
+// src/components/notifications/BaseNotification.js
+'use client';
+
+import { FaBell, FaEnvelope, FaComments, FaInfoCircle } from 'react-icons/fa';
+
+export default function BaseNotification({ notification, onMarkAsRead, children }) {
+  const getTypeStyles = () => {
+    switch (notification.type) {
+      case 'invitation':
+        return {
+          bg: 'bg-gray-25 border-gray-200',
+          icon: <FaEnvelope className="w-4 h-4 text-gray-600" />,
+          text: 'text-gray-900'
+        };
+      case 'activity_update':
+        return {
+          bg: 'bg-gray-25 border-gray-200',
+          icon: <FaBell className="w-4 h-4 text-gray-600" />,
+          text: 'text-gray-900'
+        };
+      case 'memory_comment':
+        return {
+          bg: 'bg-gray-25 border-gray-200',
+          icon: <FaComments className="w-4 h-4 text-gray-600" />,
+          text: 'text-gray-900'
+        };
+      default:
+        return {
+          bg: 'bg-gray-25 border-gray-200',
+          icon: <FaInfoCircle className="w-4 h-4 text-gray-600" />,
+          text: 'text-gray-900'
+        };
+    }
+  };
+
+  const styles = getTypeStyles();
+
+  return (
+    <div className={`p-4 rounded-lg border transition-all duration-200 ${styles.bg} ${!notification.isRead ? 'border-l-2 border-l-gray-400' : ''}`}>
+      <div className="flex items-start space-x-3">
+        <div className={`mt-1 flex-shrink-0 ${notification.isRead ? 'opacity-50' : 'opacity-100'}`}>
+          {styles.icon}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className={`text-sm font-medium ${styles.text}`}>
+              {notification.title}
+            </h3>
+            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+              {new Date(notification.createdAt).toLocaleDateString('ru-RU')}
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-700 mb-3">
+            {notification.message}
+          </p>
+
+          {children}
+
+          <p className="text-xs text-gray-500 mt-2">
+            {new Date(notification.createdAt).toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/InfoNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications/InfoNotification.js
+РАЗМЕР: 724 символов
+================================================================================
+
+// src/components/notifications/InfoNotification.js
+'use client';
+
+import BaseNotification from './BaseNotification';
+import { FaCheck } from 'react-icons/fa';
+
+export default function InfoNotification({ notification, onMarkAsRead }) {
+  return (
+    <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+      {!notification.isRead && (
+        <button
+          onClick={() => onMarkAsRead(notification.id)}
+          className="flex items-center space-x-2 text-sm bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors font-normal"
+        >
+          <FaCheck className="w-3 h-3" />
+          <span>Прочитано</span>
+        </button>
+      )}
+    </BaseNotification>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/InvitationNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications/InvitationNotification.js
+РАЗМЕР: 4743 символов
+================================================================================
+
+// src/components/notifications/InvitationNotification.js
+'use client';
+
+import { useState } from 'react';
+import BaseNotification from './BaseNotification';
+import { useRouter } from 'next/navigation';
+import { FaCheck, FaTimes, FaArrowRight, FaSpinner } from 'react-icons/fa';
+
+export default function InvitationNotification({ notification, onMarkAsRead, onUpdate }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleAccept = async () => {
+    if (!notification.data?.invitationId) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/invitations/${notification.data.invitationId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accept: true }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        await onMarkAsRead(notification.id);
+        if (onUpdate) onUpdate();
+        
+        if (data.vacationId) {
+          console.log('Приглашение принято! Vacation ID:', data.vacationId);
+        }
+      } else {
+        alert(data.message || 'Ошибка принятия приглашения');
+      }
+    } catch (error) {
+      console.error('Ошибка принятия приглашения:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!notification.data?.invitationId) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/invitations/${notification.data.invitationId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accept: false }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        await onMarkAsRead(notification.id);
+        if (onUpdate) onUpdate();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Ошибка отклонения приглашения');
+      }
+    } catch (error) {
+      console.error('Ошибка отклонения приглашения:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoToVacation = () => {
+    if (notification.data?.vacationId) {
+      router.push(`/vacations/${notification.data.vacationId}`);
+      onMarkAsRead(notification.id);
+    }
+  };
+
+  const getActions = () => {
+    if (notification.data?.status === 'accepted') {
+      return (
+        <div className="flex space-x-2">
+          <div className="flex items-center space-x-2 text-sm text-gray-600 px-3 py-2 border border-gray-300 rounded-md">
+            <FaCheck className="w-3 h-3" />
+            <span>Принято</span>
+          </div>
+          {notification.data?.vacationId && (
+            <button
+              onClick={handleGoToVacation}
+              className="flex items-center space-x-2 text-sm bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition-colors font-normal"
+            >
+              <span>Перейти к отпуску</span>
+              <FaArrowRight className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (notification.data?.status === 'rejected') {
+      return (
+        <div className="flex items-center space-x-2 text-sm text-gray-600 px-3 py-2 border border-gray-300 rounded-md">
+          <FaTimes className="w-3 h-3" />
+          <span>Приглашение отклонено</span>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex space-x-2">
+        <button
+          onClick={handleAccept}
+          disabled={isLoading}
+          className="flex items-center space-x-2 text-sm bg-gray-800 text-white px-4 py-2 rounded-md hover:bg-gray-900 transition-colors font-normal disabled:opacity-50"
+        >
+          {isLoading ? (
+            <FaSpinner className="w-3 h-3 animate-spin" />
+          ) : (
+            <FaCheck className="w-3 h-3" />
+          )}
+          <span>{isLoading ? 'Загрузка...' : 'Принять'}</span>
+        </button>
+        <button
+          onClick={handleDecline}
+          disabled={isLoading}
+          className="flex items-center space-x-2 text-sm bg-white text-gray-700 px-4 py-2 rounded-md border border-gray-300 hover:bg-gray-50 transition-colors font-normal disabled:opacity-50"
+        >
+          {isLoading ? (
+            <FaSpinner className="w-3 h-3 animate-spin" />
+          ) : (
+            <FaTimes className="w-3 h-3" />
+          )}
+          <span>{isLoading ? 'Загрузка...' : 'Отклонить'}</span>
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+      {getActions()}
+    </BaseNotification>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/NotificationFactory.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications/NotificationFactory.js
+РАЗМЕР: 711 символов
+================================================================================
+
+// src/components/notifications/NotificationFactory.js
+'use client';
+
+import InfoNotification from './InfoNotification';
+import InvitationNotification from './InvitationNotification';
+
+export default function NotificationFactory({ notification, onMarkAsRead, onUpdate }) {
+  switch (notification.type) {
+    case 'invitation':
+      return (
+        <InvitationNotification
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+          onUpdate={onUpdate}
+        />
+      );
+    case 'activity_update':
+    case 'memory_comment':
+    default:
+      return (
+        <InfoNotification
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+        />
+      );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications-old/BaseNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications-old/BaseNotification.js
+РАЗМЕР: 2115 символов
+================================================================================
+
+// src/components/notifications/BaseNotification.js
+'use client';
+
+export default function BaseNotification({ notification, onMarkAsRead, children }) {
+  const getTypeStyles = () => {
+    switch (notification.type) {
+      case 'invitation':
+        return {
+          bg: 'bg-blue-50 border-blue-200',
+          dot: 'bg-blue-500',
+          text: 'text-blue-700'
+        };
+      case 'activity_update':
+        return {
+          bg: 'bg-green-50 border-green-200',
+          dot: 'bg-green-500',
+          text: 'text-green-700'
+        };
+      case 'memory_comment':
+        return {
+          bg: 'bg-purple-50 border-purple-200',
+          dot: 'bg-purple-500',
+          text: 'text-purple-700'
+        };
+      default:
+        return {
+          bg: 'bg-gray-50 border-gray-200',
+          dot: 'bg-gray-500',
+          text: 'text-gray-700'
+        };
+    }
+  };
+
+  const styles = getTypeStyles();
+
+  return (
+    <div className={`p-4 rounded-xl border transition-all duration-200 ${styles.bg} ${!notification.isRead ? 'border-l-4' : ''}`}>
+      <div className="flex items-start space-x-3">
+        <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${styles.dot} ${notification.isRead ? 'opacity-50' : ''}`} />
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <h3 className={`text-sm font-semibold ${styles.text}`}>
+              {notification.title}
+            </h3>
+            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+              {new Date(notification.createdAt).toLocaleDateString('ru-RU')}
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-600 mb-3">
+            {notification.message}
+          </p>
+
+          {/* Действия передаются как children */}
+          {children}
+
+          <p className="text-xs text-gray-400 mt-2">
+            {new Date(notification.createdAt).toLocaleTimeString('ru-RU', {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications-old/InfoNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications-old/InfoNotification.js
+РАЗМЕР: 599 символов
+================================================================================
+
+// src/components/notifications/InfoNotification.js
+'use client';
+
+import BaseNotification from './BaseNotification';
+
+export default function InfoNotification({ notification, onMarkAsRead }) {
+  return (
+    <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+      {!notification.isRead && (
+        <button
+          onClick={() => onMarkAsRead(notification.id)}
+          className="text-sm bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+        >
+          Прочитано
+        </button>
+      )}
+    </BaseNotification>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications-old/InvitationNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications-old/InvitationNotification.js
+РАЗМЕР: 4103 символов
+================================================================================
+
+// src/components/notifications/InvitationNotification.js
+'use client';
+
+import { useState } from 'react';
+import BaseNotification from './BaseNotification';
+import { useRouter } from 'next/navigation';
+
+export default function InvitationNotification({ notification, onMarkAsRead, onUpdate }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleAccept = async () => {
+    if (!notification.data?.invitationId) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/invitations/${notification.data.invitationId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accept: true }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        await onMarkAsRead(notification.id);
+        if (onUpdate) onUpdate();
+        
+        // Если есть vacationId, предлагаем перейти
+        if (data.vacationId) {
+          // Можно показать сообщение или автоматически перейти
+          console.log('Приглашение принято! Vacation ID:', data.vacationId);
+        }
+      } else {
+        alert(data.message || 'Ошибка принятия приглашения');
+      }
+    } catch (error) {
+      console.error('Ошибка принятия приглашения:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!notification.data?.invitationId) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/invitations/${notification.data.invitationId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ accept: false }),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        await onMarkAsRead(notification.id);
+        if (onUpdate) onUpdate();
+      } else {
+        const data = await response.json();
+        alert(data.message || 'Ошибка отклонения приглашения');
+      }
+    } catch (error) {
+      console.error('Ошибка отклонения приглашения:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoToVacation = () => {
+    if (notification.data?.vacationId) {
+      router.push(`/vacations/${notification.data.vacationId}`);
+      onMarkAsRead(notification.id);
+    }
+  };
+
+  const getActions = () => {
+    // Если приглашение уже обработано
+    if (notification.data?.status === 'accepted') {
+      return (
+        <div className="flex space-x-2">
+          <span className="text-sm text-green-600 px-3 py-2">Принято</span>
+          {notification.data?.vacationId && (
+            <button
+              onClick={handleGoToVacation}
+              className="text-sm bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+            >
+              Перейти к отпуску
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    if (notification.data?.status === 'rejected') {
+      return (
+        <span className="text-sm text-red-600 px-3 py-2">
+          Приглашение отклонено
+        </span>
+      );
+    }
+
+    // Если приглашение еще не обработано
+    return (
+      <div className="flex space-x-2">
+        <button
+          onClick={handleAccept}
+          disabled={isLoading}
+          className="text-sm bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors font-medium disabled:opacity-50"
+        >
+          {isLoading ? 'Загрузка...' : 'Принять'}
+        </button>
+        <button
+          onClick={handleDecline}
+          disabled={isLoading}
+          className="text-sm bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors font-medium disabled:opacity-50"
+        >
+          {isLoading ? 'Загрузка...' : 'Отклонить'}
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+      {getActions()}
+    </BaseNotification>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications-old/NotificationFactory.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications-old/NotificationFactory.js
+РАЗМЕР: 711 символов
+================================================================================
+
+// src/components/notifications/NotificationFactory.js
+'use client';
+
+import InfoNotification from './InfoNotification';
+import InvitationNotification from './InvitationNotification';
+
+export default function NotificationFactory({ notification, onMarkAsRead, onUpdate }) {
+  switch (notification.type) {
+    case 'invitation':
+      return (
+        <InvitationNotification
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+          onUpdate={onUpdate}
+        />
+      );
+    case 'activity_update':
+    case 'memory_comment':
+    default:
+      return (
+        <InfoNotification
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+        />
+      );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacation/CaptureMoment.js
+ПОЛНЫЙ ПУТЬ: src/components/vacation/CaptureMoment.js
+РАЗМЕР: 1225 символов
+================================================================================
+
+// src/components/vacation/CaptureMoment.js
+'use client';
+
+import { useState } from 'react';
+
+export default function CaptureMoment({ vacation }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const isVacationActive = () => {
+    const now = new Date();
+    const start = new Date(vacation.startDate);
+    const end = new Date(vacation.endDate);
+    return now >= start && now <= end;
+  };
+
+  if (!isVacationActive()) {
+    return null;
+  }
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+      <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-300">
+        <span className="text-2xl">📸</span>
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+        Запечатлейте сегодняшний день
+      </h3>
+      <p className="text-gray-600 mb-4 text-sm">
+        Добавьте до 3 фотографий, чтобы сохранить моменты этого дня
+      </p>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition duration-200 text-sm font-medium"
+      >
+        Добавить фото дня
+      </button>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: vacation/MemoriesSection.js
+ПОЛНЫЙ ПУТЬ: src/components/vacation/MemoriesSection.js
+РАЗМЕР: 2323 символов
+================================================================================
+
+// src/components/vacation/MemoriesSection.js
+'use client';
+
+import { useState, useEffect } from 'react';
+
+export default function MemoriesSection({ vacation, preview = false }) {
+  const [memories, setMemories] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    // Временно заглушка
+    setMemories([]);
+    setIsLoading(false);
+  }, [vacation.id]);
+
+  const displayedMemories = preview ? memories.slice(0, 6) : memories;
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid grid-cols-3 gap-4">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="aspect-square bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Воспоминания</h2>
+        {preview && memories.length > 6 && (
+          <button className="text-emerald-600 hover:text-emerald-500 font-medium">
+            Все воспоминания →
+          </button>
+        )}
+      </div>
+
+      {memories.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-3xl">📸</span>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Пока нет воспоминаний
+          </h3>
+          <p className="text-gray-600 mb-6">
+            Начните добавлять фотографии, чтобы сохранить моменты вашего отпуска
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {displayedMemories.map((memory, index) => (
+            <div
+              key={index}
+              className="aspect-square rounded-lg overflow-hidden group cursor-pointer relative bg-gray-100 flex items-center justify-center"
+            >
+              <span className="text-2xl">📷</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: vacation/PlanSection.js
+ПОЛНЫЙ ПУТЬ: src/components/vacation/PlanSection.js
+РАЗМЕР: 18988 символов
+================================================================================
+
+// src/components/vacation/PlansSection.js
+'use client';
+
+import { useState, useEffect } from 'react';
+
+export default function PlansSection({ vacation, preview = false }) {
+  const [plans, setPlans] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [view, setView] = useState('list');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Форма для новой активности
+  const [newActivity, setNewActivity] = useState({
+    title: '',
+    description: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    type: 'activity',
+    location: ''
+  });
+
+  useEffect(() => {
+    fetchPlans();
+  }, [vacation.id]);
+
+  const fetchPlans = async () => {
+    try {
+      const response = await fetch(`/api/vacations/${vacation.id}/activities`, {
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPlans(data);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки планов:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddActivity = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Форматируем дату и время
+      const activityDate = new Date(newActivity.date);
+      if (newActivity.startTime) {
+        const [hours, minutes] = newActivity.startTime.split(':');
+        activityDate.setHours(parseInt(hours), parseInt(minutes));
+      }
+
+      const response = await fetch('/api/activities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: newActivity.title,
+          description: newActivity.description,
+          date: activityDate.toISOString(),
+          type: newActivity.type,
+          vacationId: vacation.id,
+          startTime: newActivity.startTime || null,
+          endTime: newActivity.endTime || null
+        }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Добавляем новую активность в список
+        setPlans(prev => [data, ...prev]);
+        
+        // Сбрасываем форму
+        setNewActivity({
+          title: '',
+          description: '',
+          date: '',
+          startTime: '',
+          endTime: '',
+          type: 'activity',
+          location: ''
+        });
+        
+        setShowAddForm(false);
+      } else {
+        alert(data.message || 'Ошибка при создании активности');
+      }
+    } catch (error) {
+      console.error('Ошибка создания активности:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewActivity(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const getUpcomingPlans = () => {
+    const now = new Date();
+    return plans
+      .filter(plan => new Date(plan.date) >= now)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, preview ? 3 : 100);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getPlanEmoji = (type) => {
+    const emojis = {
+      flight: '✈️',
+      hotel: '🏨',
+      restaurant: '🍽️',
+      attraction: '🏛️',
+      transportation: '🚗',
+      event: '🎪',
+      activity: '🎯',
+      shopping: '🛍️',
+      beach: '🏖️',
+      hiking: '🥾',
+      museum: '🏛️',
+      concert: '🎵',
+      sports: '⚽'
+    };
+    return emojis[type] || '📅';
+  };
+
+  const activityTypes = [
+    { value: 'activity', label: '🎯 Активность', emoji: '🎯' },
+    { value: 'flight', label: '✈️ Перелет', emoji: '✈️' },
+    { value: 'hotel', label: '🏨 Отель', emoji: '🏨' },
+    { value: 'restaurant', label: '🍽️ Ресторан', emoji: '🍽️' },
+    { value: 'attraction', label: '🏛️ Достопримечательность', emoji: '🏛️' },
+    { value: 'transportation', label: '🚗 Транспорт', emoji: '🚗' },
+    { value: 'event', label: '🎪 Мероприятие', emoji: '🎪' },
+    { value: 'shopping', label: '🛍️ Шоппинг', emoji: '🛍️' },
+    { value: 'beach', label: '🏖️ Пляж', emoji: '🏖️' },
+    { value: 'hiking', label: '🥾 Поход', emoji: '🥾' },
+    { value: 'museum', label: '🏛️ Музей', emoji: '🏛️' },
+    { value: 'concert', label: '🎵 Концерт', emoji: '🎵' },
+    { value: 'sports', label: '⚽ Спорт', emoji: '⚽' }
+  ];
+
+  const upcomingPlans = getUpcomingPlans();
+  const nearestPlan = upcomingPlans[0];
+
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-20 bg-gray-200 rounded-xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+        <h2 className="text-2xl font-bold text-gray-900">Планы и мероприятия</h2>
+        
+        {!preview && (
+          <div className="flex items-center space-x-4">
+            {/* Переключение вида */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setView('list')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  view === 'list' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📋 Список
+              </button>
+              <button
+                onClick={() => setView('calendar')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  view === 'calendar' 
+                    ? 'bg-white text-gray-900 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                📅 Календарь
+              </button>
+            </div>
+
+            <button 
+              onClick={() => setShowAddForm(true)}
+              className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 font-semibold flex items-center space-x-2"
+            >
+              <span>+</span>
+              <span>Добавить план</span>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Форма добавления активности */}
+      {showAddForm && (
+        <div className="bg-gray-50 rounded-2xl p-6 mb-6 border-2 border-dashed border-gray-300">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Добавить новую активность</h3>
+            <button
+              onClick={() => setShowAddForm(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+
+          <form onSubmit={handleAddActivity} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Название */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Название активности *
+                </label>
+                <input
+                  type="text"
+                  name="title"
+                  value={newActivity.title}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Например: Посещение Эрмитажа"
+                />
+              </div>
+
+              {/* Тип активности */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Тип активности *
+                </label>
+                <select
+                  name="type"
+                  value={newActivity.type}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                >
+                  {activityTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Дата */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Дата *
+                </label>
+                <input
+                  type="date"
+                  name="date"
+                  value={newActivity.date}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Время начала */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Время начала
+                </label>
+                <input
+                  type="time"
+                  name="startTime"
+                  value={newActivity.startTime}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Время окончания */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Время окончания
+                </label>
+                <input
+                  type="time"
+                  name="endTime"
+                  value={newActivity.endTime}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Описание */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Описание
+                </label>
+                <textarea
+                  name="description"
+                  value={newActivity.description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  placeholder="Дополнительная информация о активности..."
+                />
+              </div>
+            </div>
+
+            {/* Кнопки */}
+            <div className="flex justify-end space-x-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200"
+              >
+                Отмена
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin"></div>
+                    <span>Добавление...</span>
+                  </>
+                ) : (
+                  <span>Добавить активность</span>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Ближайший план (только в превью) */}
+      {preview && nearestPlan && (
+        <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center space-x-3 mb-2">
+                <div className="text-2xl">{getPlanEmoji(nearestPlan.type)}</div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">Ближайшее мероприятие</h3>
+                  <p className="text-blue-600 font-semibold">Следующее в плане</p>
+                </div>
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-1">{nearestPlan.title}</h4>
+              <p className="text-gray-600">{nearestPlan.description}</p>
+              <div className="flex items-center text-sm text-gray-500 mt-2">
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {formatDate(nearestPlan.date)}
+              </div>
+            </div>
+            <button className="bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition duration-200 font-semibold whitespace-nowrap">
+              Все планы →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {plans.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <span className="text-3xl">📅</span>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-3">Планов пока нет</h3>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Добавьте мероприятия, экскурсии и другие планы, чтобы ничего не забыть во время отпуска
+          </p>
+          <button 
+            onClick={() => setShowAddForm(true)}
+            className="bg-emerald-500 text-white px-8 py-3 rounded-xl hover:bg-emerald-600 transition duration-200 font-semibold shadow-lg"
+          >
+            + Добавить первый план
+          </button>
+        </div>
+      ) : view === 'list' ? (
+        <div className="space-y-4">
+          {(preview ? upcomingPlans : plans).map((plan) => (
+            <div
+              key={plan.id}
+              className="border-2 border-gray-100 rounded-2xl p-5 hover:border-emerald-200 hover:shadow-md transition-all duration-200 group"
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <div className="text-2xl">{getPlanEmoji(plan.type)}</div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
+                        {plan.title}
+                      </h3>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {formatDate(plan.date)}
+                        {plan.startTime && (
+                          <span className="ml-2">
+                            в {formatTime(plan.date)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {plan.description && (
+                    <p className="text-gray-600 mb-3">{plan.description}</p>
+                  )}
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {plan.location && (
+                      <span className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                        📍 {plan.location.name || plan.location}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                      {activityTypes.find(t => t.value === plan.type)?.label || plan.type}
+                    </span>
+                    {plan.author && (
+                      <span className="inline-flex items-center px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                        👤 {plan.author.name}
+                      </span>
+                    )}
+                    {plan.participants && plan.participants.length > 0 && (
+                      <span className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm">
+                        👥 {plan.participants.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-end space-y-2 ml-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-400 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                    {new Date(plan.date).getDate()}
+                  </div>
+                  <div className="text-xs text-gray-500 text-center">
+                    {new Date(plan.date).toLocaleDateString('ru-RU', { month: 'short' })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* Calendar View */
+        <div className="bg-gray-50 rounded-2xl p-6">
+          <p className="text-center text-gray-500">Вид календаря будет реализован позже</p>
+        </div>
+      )}
+
+      {preview && upcomingPlans.length > 3 && (
+        <div className="text-center mt-8">
+          <button className="bg-gradient-to-r from-emerald-500 to-teal-400 text-white px-8 py-3 rounded-xl hover:from-emerald-600 hover:to-teal-500 transition duration-200 font-semibold shadow-lg">
+            Показать все {plans.length} планов →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: vacation/VacationManagement.js
+ПОЛНЫЙ ПУТЬ: src/components/vacation/VacationManagement.js
+РАЗМЕР: 5122 символов
+================================================================================
+
+// src/components/vacation/VacationManagement.js
+'use client';
+
+import { useState } from 'react';
+
+export default function VacationManagement({ vacation, onUpdate }) {
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    
+    setIsLoading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch(`/api/vacations/${vacation.id}/invite`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: inviteEmail }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage('✅ Приглашение отправлено!');
+        setInviteEmail('');
+        onUpdate?.(); // Обновляем данные отпуска
+      } else {
+        setMessage(`❌ ${data.message}`);
+      }
+    } catch (error) {
+      setMessage('❌ Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isOwner = vacation.userId === vacation.user?.id;
+
+  if (!isOwner) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Приглашение участников */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">Пригласить участников</h3>
+        
+        {message && (
+          <div className={`p-3 rounded-lg mb-4 ${
+            message.includes('✅') ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+          }`}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleInvite} className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            placeholder="Email участника"
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            required
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            {isLoading ? 'Отправка...' : 'Пригласить'}
+          </button>
+        </form>
+        
+        <p className="text-sm text-gray-500 mt-2">
+          Пользователь получит уведомление о приглашении
+        </p>
+      </div>
+
+      {/* Список участников */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <h3 className="text-lg font-semibold mb-4">
+          Участники ({vacation.members?.length || 0})
+        </h3>
+        
+        <div className="space-y-3">
+          {vacation.members?.map((member) => (
+            <div
+              key={member.id}
+              className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
+                  {member.user.avatar ? (
+                    <img
+                      src={member.user.avatar}
+                      alt={member.user.name}
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : (
+                    member.user.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">
+                    {member.user.name}
+                    {member.role === 'owner' && (
+                      <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                        Владелец
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {member.user.email}
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-sm">
+                {member.status === 'pending' ? (
+                  <span className="text-orange-600 bg-orange-50 px-2 py-1 rounded">Ожидает принятия</span>
+                ) : member.status === 'accepted' ? (
+                  <span className="text-green-600 bg-green-50 px-2 py-1 rounded">Участник</span>
+                ) : (
+                  <span className="text-red-600 bg-red-50 px-2 py-1 rounded">Отклонено</span>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          {(!vacation.members || vacation.members.length === 0) && (
+            <div className="text-center py-8 text-gray-500">
+              Пока нет участников
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: vacation/VacationTimer.js
+ПОЛНЫЙ ПУТЬ: src/components/vacation/VacationTimer.js
+РАЗМЕР: 6075 символов
+================================================================================
+
+// src/components/vacation/VacationTimer.js
+'use client';
+
+import { useState, useEffect } from 'react';
+
+export default function VacationTimer({ vacation }) {
+  const [timeLeft, setTimeLeft] = useState({
+    status: 'upcoming',
+    days: 0
+  });
+
+  // Функция для правильного склонения слова "день"
+  const getDaysText = (days) => {
+    const lastDigit = days % 10;
+    const lastTwoDigits = days % 100;
+    
+    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
+      return 'дней';
+    }
+    
+    if (lastDigit === 1) {
+      return 'день';
+    }
+    
+    if (lastDigit >= 2 && lastDigit <= 4) {
+      return 'дня';
+    }
+    
+    return 'дней';
+  };
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const startDate = new Date(vacation.startDate);
+      const endDate = new Date(vacation.endDate);
+      
+      if (now < startDate) {
+        const diff = startDate - now;
+        return {
+          status: 'upcoming',
+          days: Math.floor(diff / (1000 * 60 * 60 * 24))
+        };
+      } else if (now <= endDate) {
+        const diff = endDate - now;
+        return {
+          status: 'current',
+          days: Math.floor(diff / (1000 * 60 * 60 * 24))
+        };
+      } else {
+        return {
+          status: 'past',
+          days: 0
+        };
+      }
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, [vacation]);
+
+  const getStatusConfig = () => {
+    switch (timeLeft.status) {
+      case 'upcoming':
+        return {
+          text: 'ДО НАЧАЛА ОТПУСКА',
+          bgGradient: 'from-blue-50/90 to-sky-50/70',
+          borderColor: 'border-blue-200/30',
+          textColor: 'text-blue-700',
+          emoji: '🛩️',
+          // МЯГКИЙ СИНИЙ РАДИАЛЬНЫЙ ГРАДИЕНТ
+          radialGradient: 'radial-gradient(circle at center, #93c5fd 0%, #60a5fa 40%, #3b82f6 80%)',
+          daysText: 'text-white'
+        };
+      case 'current':
+        return {
+          text: 'ДО КОНЦА ОТПУСКА',
+          bgGradient: 'from-emerald-50/90 to-teal-50/70',
+          borderColor: 'border-emerald-200/30',
+          textColor: 'text-emerald-700',
+          emoji: '🎉',
+          radialGradient: 'radial-gradient(circle at center, #86efac 0%, #4ade80 40%, #16a34a 80%)',
+          daysText: 'text-white'
+        };
+      case 'past':
+        return {
+          text: 'ОТПУСК ЗАВЕРШЕН',
+          bgGradient: 'from-purple-50/90 to-pink-50/70',
+          borderColor: 'border-purple-200/30',
+          textColor: 'text-purple-700',
+          emoji: '🏆',
+          radialGradient: 'radial-gradient(circle at center, #d8b4fe 0%, #c084fc 40%, #a855f7 80%)',
+          daysText: 'text-white'
+        };
+      default:
+        return {
+          text: '',
+          bgGradient: 'from-gray-50/90 to-gray-100/70',
+          borderColor: 'border-gray-200/30',
+          textColor: 'text-gray-700',
+          emoji: '📅',
+          radialGradient: 'radial-gradient(circle at center, #d1d5db 0%, #9ca3af 40%, #6b7280 80%)',
+          daysText: 'text-white'
+        };
+    }
+  };
+
+  const config = getStatusConfig();
+  const daysText = getDaysText(timeLeft.days);
+
+  if (timeLeft.status === 'past') {
+    return (
+      <div className="text-center">
+        <div className={`bg-gradient-to-br ${config.bgGradient} backdrop-blur-sm ${config.textColor} rounded-2xl p-8 max-w-md mx-auto shadow-lg border ${config.borderColor}`}>
+          <div className="text-5xl mb-4">{config.emoji}</div>
+          <h2 className="text-2xl font-bold mb-2">{config.text}</h2>
+          <p className="text-lg opacity-80 mb-4">Надеемся, вам понравилось путешествие!</p>
+          {vacation.destination && (
+            <div className="bg-white/30 rounded-xl py-3 px-4 border border-white/20 backdrop-blur-sm">
+              <span className="text-sm font-medium">📍 {vacation.destination}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center">
+      <div className={`bg-gradient-to-br ${config.bgGradient} backdrop-blur-sm ${config.textColor} rounded-2xl p-8 max-w-sm mx-auto shadow-lg border ${config.borderColor}`}>
+        
+        {/* Статус и эмодзи */}
+        <div className="mb-8">
+          <div className="text-4xl mb-3 opacity-90">{config.emoji}</div>
+          <h2 className="text-lg font-semibold opacity-90">{config.text}</h2>
+        </div>
+
+        {/* КВАДРАТ С МЯГКИМ СИНИМ ГРАДИЕНТОМ */}
+        <div className="mb-6 flex justify-center">
+          <div 
+            className={`${config.daysText} rounded-2xl p-8 border border-white/40 shadow-2xl backdrop-blur-sm w-52 h-52 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden`}
+            style={{ background: config.radialGradient }}
+          >
+            {/* Мягкий оверлей для еще более нежного эффекта */}
+            <div className="absolute inset-0 bg-white/5 rounded-2xl"></div>
+            
+            {/* Контент */}
+            <div className="relative z-10">
+              <div className="text-6xl font-bold mb-2 leading-none drop-shadow-lg">
+                {timeLeft.days}
+              </div>
+              <div className="text-xl font-medium opacity-95 drop-shadow">{daysText}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Даты отпуска */}
+        <div className="bg-white/40 rounded-xl py-4 px-5 border border-white/30 backdrop-blur-sm mb-3">
+          <div className="text-sm font-medium opacity-80 mb-1">Даты отпуска</div>
+          <div className="text-base font-semibold">
+            {new Date(vacation.startDate).toLocaleDateString('ru-RU')} - {new Date(vacation.endDate).toLocaleDateString('ru-RU')}
+          </div>
+        </div>
+
+        {/* Название отпуска */}
+        {vacation.destination && (
+          <div className="text-sm opacity-70 font-medium">
+            📍 {vacation.destination}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
