@@ -1,13 +1,15 @@
 // src/components/NotificationCenter.js
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import NotificationFactory from './notifications/NotificationFactory';
 
 export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useRef(null);
+  const observerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -19,14 +21,55 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
 
     return () => {
       document.body.style.overflow = 'unset';
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
     };
   }, [isOpen]);
+
+  // Настройка Intersection Observer для автоматического отметки прочитанными
+  useEffect(() => {
+    if (!isOpen || notifications.length === 0) return;
+
+    const unreadNotifications = notifications.filter(n => !n.isRead);
+    if (unreadNotifications.length === 0) return;
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const notificationId = entry.target.dataset.notificationId;
+            markAsRead(notificationId);
+          }
+        });
+      },
+      {
+        root: containerRef.current,
+        threshold: 0.5,
+        rootMargin: '0px 0px -50px 0px'
+      }
+    );
+
+    unreadNotifications.forEach(notification => {
+      const element = document.querySelector(`[data-notification-id="${notification.id}"]`);
+      if (element) {
+        observerRef.current.observe(element);
+      }
+    });
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isOpen, notifications]);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/notifications', {
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       });
       
       if (response.ok) {
@@ -54,7 +97,15 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
       });
 
       if (response.ok) {
-        fetchNotifications();
+        if (notificationId) {
+          setNotifications(prev => 
+            prev.map(n => 
+              n.id === notificationId ? { ...n, isRead: true } : n
+            )
+          );
+        } else {
+          setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        }
         onUpdate?.();
       }
     } catch (error) {
@@ -62,49 +113,74 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
     }
   };
 
+  const handleMarkAllAsRead = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    markAsRead();
+  };
+
+  const handleClose = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
+
   if (!isOpen) return null;
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="fixed inset-0 z-[9999]">
-      <div className="flex items-center justify-center h-full">
-        {/* Мобильная версия */}
-        <div className="md:hidden w-full h-full bg-white flex flex-col">
+    <div 
+      className="fixed inset-0 z-[9999]" 
+      onClick={handleClose}
+    >
+      <div className="flex items-center justify-center h-full w-full">
+        {/* Мобильная версия - занимает всю высоту экрана */}
+        <div 
+          className="md:hidden w-full h-full bg-white flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
           <Header 
             unreadCount={unreadCount} 
-            onMarkAllAsRead={() => markAsRead()} 
-            onClose={onClose}
+            onMarkAllAsRead={handleMarkAllAsRead} 
+            onClose={handleClose}
             isMobile={true}
           />
           <NotificationContent 
+            ref={containerRef}
             isLoading={isLoading}
             notifications={notifications}
             markAsRead={markAsRead}
             fetchNotifications={fetchNotifications}
+            isMobile={true}
           />
         </div>
 
-        {/* Десктоп версия */}
-        <div className="hidden md:block w-full max-w-2xl max-h-[90vh] bg-white rounded-2xl shadow-2xl border border-gray-200 mx-4">
+        {/* Десктоп версия - компактная с правой стороны */}
+        <div 
+          className="hidden md:block absolute top-4 right-4 w-96 h-[85vh] bg-white rounded-2xl shadow-2xl border border-gray-200"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex flex-col h-full">
             <Header 
               unreadCount={unreadCount} 
-              onMarkAllAsRead={() => markAsRead()} 
-              onClose={onClose}
+              onMarkAllAsRead={handleMarkAllAsRead} 
+              onClose={handleClose}
               isMobile={false}
             />
             
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 min-h-0"> {/* Важно: min-h-0 для правильного скролла */}
               <NotificationContent 
+                ref={containerRef}
                 isLoading={isLoading}
                 notifications={notifications}
                 markAsRead={markAsRead}
                 fetchNotifications={fetchNotifications}
+                isMobile={false}
               />
             </div>
 
-            <Footer onClose={onClose} />
+            <Footer onClose={handleClose} />
           </div>
         </div>
       </div>
@@ -112,13 +188,17 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
   );
 }
 
-// Вынесем компоненты для чистоты кода
 function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
   return (
-    <div className={`flex items-center justify-between ${isMobile ? 'p-4 border-b border-gray-200' : 'p-6 border-b border-gray-200 rounded-t-2xl'}`}>
+    <div className={`flex items-center justify-between ${
+      isMobile ? 'p-4 border-b border-gray-200' : 'p-4 border-b border-gray-200'
+    }`}>
       <div className="flex items-center space-x-3">
         {isMobile && (
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+          <button 
+            onClick={onClose} 
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
             <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
@@ -133,7 +213,7 @@ function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
             </div>
           )}
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Уведомления</h2>
+            <h2 className="text-lg font-bold text-gray-900">Уведомления</h2>
             {unreadCount > 0 && (
               <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
             )}
@@ -141,18 +221,21 @@ function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
         </div>
       </div>
       
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center space-x-2">
         {unreadCount > 0 && (
           <button
             onClick={onMarkAllAsRead}
-            className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50"
+            className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
           >
             Прочитать все
           </button>
         )}
         {!isMobile && (
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
-            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button 
+            onClick={onClose} 
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -164,10 +247,10 @@ function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
 
 function Footer({ onClose }) {
   return (
-    <div className="p-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+    <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
       <Link
         href="/notifications"
-        className="block w-full text-center bg-white text-gray-700 py-3 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300"
+        className="block w-full text-center bg-white text-gray-700 py-2 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300 transition-colors"
         onClick={onClose}
       >
         Все уведомления
@@ -176,10 +259,16 @@ function Footer({ onClose }) {
   );
 }
 
-function NotificationContent({ isLoading, notifications, markAsRead, fetchNotifications }) {
+const NotificationContent = React.forwardRef(({ 
+  isLoading, 
+  notifications, 
+  markAsRead, 
+  fetchNotifications, 
+  isMobile 
+}, ref) => {
   if (isLoading) {
     return (
-      <div className="space-y-4 p-6">
+      <div className="p-4 space-y-4">
         {[...Array(6)].map((_, i) => (
           <div key={i} className="animate-pulse">
             <div className="flex space-x-3">
@@ -198,28 +287,47 @@ function NotificationContent({ isLoading, notifications, markAsRead, fetchNotifi
 
   if (notifications.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-8">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-10 h-10 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className={`flex flex-col items-center justify-center text-gray-500 ${
+        isMobile ? 'h-[60vh] p-8' : 'h-64 p-6'
+      }`}>
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <svg className="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
           </svg>
         </div>
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Нет уведомлений</h3>
-        <p className="text-center text-gray-600">Здесь появятся ваши уведомления</p>
+        <p className="text-center text-gray-600 text-sm">Здесь появятся ваши уведомления</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-3">
-      {notifications.map((notification) => (
-        <NotificationFactory
-          key={notification.id}
-          notification={notification}
-          onMarkAsRead={markAsRead}
-          onUpdate={fetchNotifications}
-        />
-      ))}
+    <div 
+      ref={ref}
+      className={`h-full overflow-y-auto notification-scroll ${
+        isMobile ? 'p-4' : 'p-3'
+      }`}
+      style={isMobile ? {} : { maxHeight: 'calc(85vh - 120px)' }} // 85vh минус высота header и footer
+    >
+      <div className="space-y-3">
+        {notifications.map((notification) => (
+          <div
+            key={notification.id}
+            data-notification-id={notification.id}
+            className="notification-item"
+          >
+            <NotificationFactory
+              notification={notification}
+              onMarkAsRead={markAsRead}
+              onUpdate={fetchNotifications}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
-}
+});
+
+NotificationContent.displayName = 'NotificationContent';
+
+import React from 'react';

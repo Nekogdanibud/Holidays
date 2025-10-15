@@ -10,35 +10,24 @@ datasource db {
 }
 
 model User {
-  id                String   @id @default(cuid())
-  email             String   @unique
-  name              String
-  password          String
-  avatar            String?
-  banner            String?
-  bio               String?
-  location          String?
-  website           String?
-  profileVisibility String   @default("public") // public, private, friends
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Отношения
-  sessions            Session[]
-  vacationMembers     VacationMember[]
+  sessions         Session[]
+  vacationMembers  VacationMember[]
   activityParticipants ActivityParticipant[]
-  memories           Memory[]
-  memoryLikes        MemoryLike[]
-  memoryComments     MemoryComment[]
-  sentInvitations    Invitation[] @relation("InvitationSender")
-  notifications      Notification[]
-  ownedVacations     Vacation[] // Отношение к отпускам, которые пользователь создал
-  
-  // Новые отношения для системы профилей
-  posts              Post[]
-  postLikes          PostLike[]
-  achievements       Achievement[]
-  comments           Comment[]
+  memories         Memory[]
+  memoryLikes      MemoryLike[]
+  memoryComments   MemoryComment[]
+  sentInvitations  Invitation[] @relation("InvitationSender")
+  notifications    Notification[]
+  ownedVacations   Vacation[] // Отношение к отпускам, которые пользователь создал
 
   @@map("users")
 }
@@ -52,8 +41,7 @@ model Session {
   ipAddress    String?
   expiresAt    DateTime
   createdAt    DateTime @default(now())
-  isPersistent Boolean  @default(false)
-  
+  isPersistent Boolean @default(false)  
   @@map("sessions")
 }
 
@@ -202,9 +190,6 @@ model Memory {
   likes       MemoryLike[]
   comments    MemoryComment[]
 
-  // Новое отношение для универсальных комментариев
-  postComments Comment[]
-
   @@map("memories")
 }
 
@@ -266,74 +251,4 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
-}
-
-// НОВЫЕ МОДЕЛИ ДЛЯ СИСТЕМЫ ПРОФИЛЕЙ
-
-model Post {
-  id        String   @id @default(cuid())
-  content   String
-  isPublic  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Автор поста
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  
-  // Лайки и комментарии
-  likes     PostLike[]
-  comments  Comment[]
-
-  @@map("posts")
-}
-
-model PostLike {
-  id     String @id @default(cuid())
-  userId String
-  postId String
-
-  // Отношения
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, postId])
-  @@map("post_likes")
-}
-
-model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Автор комментария
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-
-  // Пост, к которому относится комментарий
-  postId    String?
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  // Память, к которой относится комментарий (если это комментарий к воспоминанию)
-  memoryId  String?
-  memory    Memory?  @relation(fields: [memoryId], references: [id], onDelete: Cascade)
-
-  @@map("comments")
-}
-
-model Achievement {
-  id          String   @id @default(cuid())
-  type        String   // first_vacation, memory_master, social_butterfly, planner, explorer, early_bird
-  title       String
-  description String
-  icon        String   // Эмодзи или URL иконки
-  earnedAt    DateTime @default(now())
-  
-  // Пользователь, получивший достижение
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, type])
-  @@map("achievements")
 }

@@ -33,14 +33,14 @@ async function getAllFiles(dirPath, excludedFolders = []) {
 }
 
 async function saveAllFilesContent() {
-    const srcPath = './src/';
+    const srcPath = './src/app/api';
     const outputFile = './all-files-content.txt';
     
     // Исключенные файлы
     const excludedFiles = ['global.css', 'favicon.ico'];
     
     // Исключенные папки
-    const excludedFolders = ['app','api', 'node_modules', 'dist', 'build', '.git', '.next', 'cache', 'temp'];
+    const excludedFolders = ['api', 'node_modules', 'dist', 'build', '.git', '.next', 'cache', 'temp'];
     
     try {
         console.log('🔍 Поиск файлов...');

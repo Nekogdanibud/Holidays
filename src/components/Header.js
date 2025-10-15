@@ -39,6 +39,29 @@ export default function Header() {
     setIsMenuOpen(false);
   };
 
+  const handleNotificationClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsNotificationOpen(true);
+  };
+
+  const handleMobileNotificationClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsNotificationOpen(true);
+    setIsMenuOpen(false);
+  };
+
+  const handleMenuToggle = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLinkClick = () => {
+    setIsMenuOpen(false);
+  };
+
   if (isLoading) {
     return (
       <header className="bg-white shadow-sm sticky top-0 z-50">
@@ -96,7 +119,7 @@ export default function Header() {
                 <>
                   {/* Центр уведомлений */}
                   <button 
-                    onClick={() => setIsNotificationOpen(true)}
+                    onClick={handleNotificationClick}
                     className="relative p-2 text-gray-600 hover:text-emerald-600 transition duration-200"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +172,7 @@ export default function Header() {
             {/* Кнопка мобильного меню */}
             <button 
               className="md:hidden p-2 rounded-md text-gray-600 hover:text-emerald-600 hover:bg-gray-100 transition duration-200"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={handleMenuToggle}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {isMenuOpen ? (
@@ -168,21 +191,21 @@ export default function Header() {
                 <Link 
                   href="/features" 
                   className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={handleLinkClick}
                 >
                   Возможности
                 </Link>
                 <Link 
                   href="/about" 
                   className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={handleLinkClick}
                 >
                   О нас
                 </Link>
                 <Link 
                   href="/community" 
                   className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={handleLinkClick}
                 >
                   Сообщество
                 </Link>
@@ -191,10 +214,7 @@ export default function Header() {
                   {isLoggedIn ? (
                     <>
                       <button 
-                        onClick={() => {
-                          setIsNotificationOpen(true);
-                          setIsMenuOpen(false);
-                        }}
+                        onClick={handleMobileNotificationClick}
                         className="flex items-center space-x-2 text-gray-600 hover:text-emerald-600 transition duration-200 py-2 w-full text-left"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -211,14 +231,14 @@ export default function Header() {
                       <Link 
                         href="/my-vacations" 
                         className="block text-emerald-600 hover:text-emerald-700 font-medium transition duration-200 py-2"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={handleLinkClick}
                       >
                         Мои отпуски
                       </Link>
                       <Link 
                         href="/profile" 
                         className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={handleLinkClick}
                       >
                         {user?.name || 'Профиль'}
                       </Link>
@@ -234,14 +254,14 @@ export default function Header() {
                       <Link 
                         href="/login" 
                         className="block text-emerald-600 hover:text-emerald-700 font-medium transition duration-200 py-2"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={handleLinkClick}
                       >
                         Вход
                       </Link>
                       <Link 
                         href="/registration" 
                         className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
-                        onClick={() => setIsMenuOpen(false)}
+                        onClick={handleLinkClick}
                       >
                         Начать бесплатно
                       </Link>
