@@ -34,7 +34,7 @@ async function getAllFiles(dirPath, excludedFolders = []) {
 
 async function saveAllFilesContent() {
     const srcPath = './src/';
-    const outputFile = './all-files-content.txt';
+    const outputFile = './components.txt';
     
     // Исключенные файлы
     const excludedFiles = ['global.css', 'favicon.ico'];

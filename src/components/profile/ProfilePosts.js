@@ -10,7 +10,6 @@ export default function ProfilePosts({ profile, onUpdate }) {
   const [isLoading, setIsLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPublic, setIsPublic] = useState(true);
 
   const isOwnProfile = user?.id === profile.id;
 
@@ -50,8 +49,7 @@ export default function ProfilePosts({ profile, onUpdate }) {
         },
         body: JSON.stringify({
           content: newPostContent,
-          isPublic,
-          userId: user.id // Добавляем userId
+          // УБРАН isPublic - теперь видимость определяется настройками профиля
         }),
         credentials: 'include'
       });
@@ -60,11 +58,10 @@ export default function ProfilePosts({ profile, onUpdate }) {
         const newPost = await response.json();
         setPosts(prev => [newPost, ...prev]);
         setNewPostContent('');
-        setIsPublic(true);
         onUpdate?.();
       } else {
         const errorData = await response.json();
-        console.error('Ошибка создания поста:', errorData.error);
+        console.error('Ошибка создания поста:', errorData.message);
       }
     } catch (error) {
       console.error('Ошибка создания поста:', error);
@@ -77,32 +74,28 @@ export default function ProfilePosts({ profile, onUpdate }) {
     try {
       const response = await fetch(`/api/profile/posts/${postId}/like`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id // Добавляем userId
-        }),
         credentials: 'include'
       });
 
       if (response.ok) {
+        const result = await response.json();
+        
         // Обновляем локальное состояние
         setPosts(prev => prev.map(post => {
           if (post.id === postId) {
-            const isLiked = post.likes.some(like => like.userId === user.id);
+            const isLiked = result.liked;
             return {
               ...post,
               likes: isLiked 
-                ? post.likes.filter(like => like.userId !== user.id)
-                : [...post.likes, { userId: user.id }]
+                ? [...post.likes, { userId: user.id }]
+                : post.likes.filter(like => like.userId !== user.id)
             };
           }
           return post;
         }));
       } else {
         const errorData = await response.json();
-        console.error('Ошибка лайка поста:', errorData.error);
+        console.error('Ошибка лайка поста:', errorData.message);
       }
     } catch (error) {
       console.error('Ошибка лайка поста:', error);
@@ -147,15 +140,12 @@ export default function ProfilePosts({ profile, onUpdate }) {
             />
             <div className="flex justify-between items-center mt-4">
               <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2 text-sm text-gray-600">
-                  <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
-                  />
-                  <span>Публичная запись</span>
-                </label>
+                {/* Информация о видимости вместо галочки isPublic */}
+                <div className="text-sm text-gray-500">
+                  {profile.profileVisibility === 'PUBLIC' && '📢 Публичный профиль - посты видны всем'}
+                  {profile.profileVisibility === 'FRIENDS_ONLY' && '👥 Только друзья - посты видны только друзьям'}
+                  {profile.profileVisibility === 'PRIVATE' && '🔒 Приватный профиль - посты видны только вам'}
+                </div>
                 <span className="text-sm text-gray-500">
                   {newPostContent.length}/500
                 </span>
@@ -163,9 +153,26 @@ export default function ProfilePosts({ profile, onUpdate }) {
               <button
                 type="submit"
                 disabled={!newPostContent.trim() || isSubmitting}
-                className="bg-emerald-500 text-white px-6 py-2 rounded-full hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="bg-emerald-500 text-white p-3 rounded-full hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-12 h-12"
+                title="Опубликовать"
               >
-                {isSubmitting ? 'Публикация...' : 'Опубликовать'}
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+                ) : (
+                  <svg 
+                    className="w-5 h-5 transform rotate-45" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+                    />
+                  </svg>
+                )}
               </button>
             </div>
           </form>
@@ -183,7 +190,9 @@ export default function ProfilePosts({ profile, onUpdate }) {
             <p className="text-gray-600">
               {isOwnProfile ? 
                 'Напишите первую запись, чтобы поделиться новостями' :
-                'Пользователь еще не опубликовал ни одной записи'
+                !profile.canViewPosts ? 
+                  'Нет доступа к постам этого пользователя' :
+                  'Пользователь еще не опубликовал ни одной записи'
               }
             </p>
           </div>
@@ -202,7 +211,7 @@ export default function ProfilePosts({ profile, onUpdate }) {
   );
 }
 
-// Компонент карточки поста
+// Компонент PostCard (должен быть внутри этого же файла)
 function PostCard({ post, onLike, currentUserId }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLiked = post.likes.some(like => like.userId === currentUserId);
@@ -250,14 +259,6 @@ function PostCard({ post, onLike, currentUserId }) {
             <div className="font-semibold text-gray-900">{post.author.name}</div>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <span>{formatDate(post.createdAt)}</span>
-              {!post.isPublic && (
-                <span className="flex items-center space-x-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Только для меня</span>
-                </span>
-              )}
             </div>
           </div>
         </div>

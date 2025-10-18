@@ -1,42 +1,30 @@
 // src/app/api/profile/posts/route.js
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
 
-const prisma = new PrismaClient();
-
-// Вспомогательная функция для получения пользователя из сессии
-async function getAuthUser(request) {
-  try {
-    // Получаем сессию из cookies
-    const cookieHeader = request.headers.get('cookie');
-    
-    // Если у вас есть сессия в cookies, можно получить userId оттуда
-    // Или используем заголовки, если передаете токен
-    const authHeader = request.headers.get('authorization');
-    
-    // Временное решение: будем использовать userId из query параметра для GET запросов
-    // Для POST запросов будем проверять через сессию
-    return { id: null }; // Заглушка - нужно адаптировать под вашу систему
-  } catch (error) {
-    return null;
-  }
-}
-
-// GET /api/profile/posts?userId=...
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
     }
 
-    // Проверяем существование пользователя
-    const user = await prisma.user.findUnique({
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    if (!userId) {
+      return NextResponse.json({ message: 'User ID обязателен' }, { status: 400 });
+    }
+
+    // Находим пользователя и проверяем настройки приватности
+    const profileUser = await prisma.user.findUnique({
       where: { id: userId },
       select: { 
         id: true,
@@ -44,33 +32,55 @@ export async function GET(request) {
       }
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+    if (!profileUser) {
+      return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
     }
 
-    // Получаем текущего пользователя из сессии
-    const currentUser = await getAuthUser(request);
-    const isOwnProfile = currentUser?.id === userId;
+    const currentUserId = decoded.userId;
+    const isOwnProfile = currentUserId === userId;
 
-    // Определяем, какие посты показывать
-    let whereCondition = { authorId: userId };
-
-    if (!isOwnProfile && user.profileVisibility === 'private') {
-      // Для приватных профилей показываем только публичные посты
-      whereCondition.isPublic = true;
+    // Проверяем видимость постов
+    let canViewPosts = false;
+    
+    if (isOwnProfile) {
+      canViewPosts = true;
+    } else {
+      switch (profileUser.profileVisibility) {
+        case 'PUBLIC':
+          canViewPosts = true;
+          break;
+        case 'FRIENDS_ONLY':
+          // Проверяем дружбу
+          const friendship = await prisma.friendship.findFirst({
+            where: {
+              OR: [
+                { user1Id: currentUserId, user2Id: userId },
+                { user1Id: userId, user2Id: currentUserId }
+              ]
+            }
+          });
+          canViewPosts = !!friendship;
+          break;
+        case 'PRIVATE':
+          canViewPosts = false;
+          break;
+      }
     }
 
+    if (!canViewPosts) {
+      return NextResponse.json([], { status: 200 });
+    }
+
+    // Получаем посты
     const posts = await prisma.post.findMany({
-      where: whereCondition,
+      where: { authorId: userId },
       include: {
         author: {
           select: {
             id: true,
             name: true,
-            avatar: true
+            avatar: true,
+            usertag: true
           }
         },
         likes: {
@@ -89,7 +99,7 @@ export async function GET(request) {
             }
           },
           orderBy: {
-            createdAt: 'desc'
+            createdAt: 'asc'
           }
         }
       },
@@ -99,52 +109,42 @@ export async function GET(request) {
     });
 
     return NextResponse.json(posts);
+
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Ошибка получения постов:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
   }
 }
 
-// POST /api/profile/posts
 export async function POST(request) {
   try {
-    // Временное решение: будем получать userId из тела запроса
-    // В реальном приложении нужно получать из сессии
-    const { content, isPublic = true, userId } = await request.json();
+    const accessToken = request.cookies.get('accessToken')?.value;
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
     }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { content } = await request.json();
 
     if (!content || content.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Content is required' },
+        { message: 'Содержание обязательно' },
         { status: 400 }
       );
     }
 
     if (content.length > 500) {
       return NextResponse.json(
-        { error: 'Content too long (max 500 characters)' },
+        { message: 'Содержание не должно превышать 500 символов' },
         { status: 400 }
-      );
-    }
-
-    // Проверяем существование пользователя
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
       );
     }
 
@@ -152,15 +152,15 @@ export async function POST(request) {
     const post = await prisma.post.create({
       data: {
         content: content.trim(),
-        isPublic,
-        authorId: userId
+        authorId: decoded.userId
       },
       include: {
         author: {
           select: {
             id: true,
             name: true,
-            avatar: true
+            avatar: true,
+            usertag: true
           }
         },
         likes: {
@@ -183,10 +183,11 @@ export async function POST(request) {
     });
 
     return NextResponse.json(post, { status: 201 });
+
   } catch (error) {
-    console.error('Error creating post:', error);
+    console.error('Ошибка создания поста:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
   }

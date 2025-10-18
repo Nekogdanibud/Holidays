@@ -1,12 +1,13 @@
+// src/app/api/profile/route.js
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
+import { getUserGroup, getLevelProgress } from '../../../lib/userLevels';
 
-// Получить профиль пользователя
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const usertag = searchParams.get('usertag');
     
     const accessToken = request.cookies.get('accessToken')?.value;
 
@@ -19,54 +20,26 @@ export async function GET(request) {
       return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
     }
 
-    const profileUserId = userId || decoded.userId;
-    const isOwnProfile = profileUserId === decoded.userId;
+    if (!usertag) {
+      return NextResponse.json({ message: 'Usertag обязателен' }, { status: 400 });
+    }
 
-    // Сначала получаем базовую информацию о пользователе БЕЗ поля vacations
+    // Находим пользователя по usertag
     const user = await prisma.user.findUnique({
-      where: { id: profileUserId },
+      where: { usertag },
       select: {
         id: true,
         name: true,
+        usertag: true,
         email: true,
         avatar: true,
         banner: true,
         bio: true,
         location: true,
         website: true,
+        experiencePoints: true,
         createdAt: true,
         profileVisibility: true,
-        achievements: {
-          select: {
-            id: true,
-            type: true,
-            title: true,
-            description: true,
-            icon: true,
-            earnedAt: true
-          }
-        },
-        posts: {
-          where: {
-            OR: [
-              { isPublic: true },
-              ...(isOwnProfile ? [{ isPublic: false }] : [])
-            ]
-          },
-          orderBy: { createdAt: 'desc' },
-          include: {
-            author: {
-              select: { id: true, name: true, avatar: true }
-            },
-            likes: {
-              select: { userId: true }
-            },
-            comments: {
-              select: { id: true }
-            }
-          }
-        },
-        // УБИРАЕМ vacations отсюда - этого поля нет в модели User
       }
     });
 
@@ -74,92 +47,112 @@ export async function GET(request) {
       return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
     }
 
-    // Получаем отпуски, созданные пользователем
-    const ownedVacations = await prisma.vacation.findMany({
+    const isOwnProfile = decoded.userId === user.id;
+
+    // Проверяем дружбу для определения видимости постов
+    let canViewPosts = false;
+    
+    if (isOwnProfile) {
+      canViewPosts = true;
+    } else {
+      switch (user.profileVisibility) {
+        case 'PUBLIC':
+          canViewPosts = true;
+          break;
+        case 'FRIENDS_ONLY':
+          // Проверяем, являются ли пользователи друзьями
+          const friendship = await prisma.friendship.findFirst({
+            where: {
+              OR: [
+                { user1Id: decoded.userId, user2Id: user.id },
+                { user1Id: user.id, user2Id: decoded.userId }
+              ]
+            }
+          });
+          canViewPosts = !!friendship;
+          break;
+        case 'PRIVATE':
+          canViewPosts = false;
+          break;
+      }
+    }
+
+    // Получаем посты в зависимости от прав доступа
+    let posts = [];
+    if (canViewPosts) {
+      posts = await prisma.post.findMany({
+        where: { authorId: user.id },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: { id: true, name: true, avatar: true }
+          },
+          likes: {
+            select: { userId: true }
+          },
+          comments: {
+            select: { id: true }
+          }
+        }
+      });
+    }
+
+    // Получаем ВСЕ отпуски пользователя через vacation_members
+    const vacationMembers = await prisma.vacationMember.findMany({
       where: {
-        userId: profileUserId,
-        OR: [
-          { isPublic: true },
-          ...(isOwnProfile ? [{ isPublic: false }] : [])
-        ]
+        userId: user.id,
+        status: 'accepted'
       },
       include: {
-        user: {
-          select: { id: true, name: true, avatar: true }
-        },
-        members: {
-          where: { status: 'accepted' },
+        vacation: {
           include: {
             user: {
               select: { id: true, name: true, avatar: true }
+            },
+            members: {
+              where: { status: 'accepted' },
+              include: {
+                user: {
+                  select: { id: true, name: true, avatar: true }
+                }
+              }
+            },
+            _count: {
+              select: {
+                activities: true,
+                memories: true,
+                members: true
+              }
             }
-          }
-        },
-        _count: {
-          select: {
-            activities: true,
-            memories: true,
-            members: true
           }
         }
       },
-      orderBy: { startDate: 'desc' }
+      orderBy: { vacation: { startDate: 'desc' } }
     });
 
-    // Получаем отпуски, где пользователь является участником (но не владельцем)
-    const memberVacations = await prisma.vacation.findMany({
-      where: {
-        members: {
-          some: {
-            userId: profileUserId,
-            status: 'accepted'
-          }
-        },
-        // Исключаем отпуски, где пользователь является владельцем (они уже в ownedVacations)
-        NOT: {
-          userId: profileUserId
-        },
-        OR: [
-          { isPublic: true },
-          ...(isOwnProfile ? [{ isPublic: false }] : [])
-        ]
-      },
-      include: {
-        user: {
-          select: { id: true, name: true, avatar: true }
-        },
-        members: {
-          where: { status: 'accepted' },
-          include: {
-            user: {
-              select: { id: true, name: true, avatar: true }
-            }
-          }
-        },
-        _count: {
-          select: {
-            activities: true,
-            memories: true,
-            members: true
-          }
-        }
-      },
-      orderBy: { startDate: 'desc' }
-    });
+    // Преобразуем в формат отпусков
+    const vacations = vacationMembers.map(member => ({
+      ...member.vacation,
+      userRole: member.role,
+      isOwner: member.role === 'owner'
+    }));
 
-    // Объединяем все отпуски
-    const allVacations = [
-      ...ownedVacations,
-      ...memberVacations
-    ].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+    // Получаем информацию об уровне пользователя
+    const userGroup = await getUserGroup(user.id);
+    const levelProgress = await getLevelProgress(user.id);
 
-    // Формируем финальный ответ
-    const userWithAllVacations = {
+    // Формируем полный профиль
+    const userProfile = {
       ...user,
-      vacations: allVacations // Добавляем vacations в ответ
+      posts,
+      vacations,
+      canViewPosts,
+      // Добавляем информацию об уровне
+      userGroup,
+      levelProgress
     };
 
-    return NextResponse.json(userWithAllVacations);
+    return NextResponse.json(userProfile);
 
   } catch (error) {
     console.error('Ошибка получения профиля:', error);
@@ -170,7 +163,7 @@ export async function GET(request) {
   }
 }
 
-// Обновить профиль
+// API для обновления профиля
 export async function PUT(request) {
   try {
     const accessToken = request.cookies.get('accessToken')?.value;
@@ -184,22 +177,62 @@ export async function PUT(request) {
       return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
     }
 
-    const { name, bio, location, website, profileVisibility, avatar, banner } = await request.json();
+    const { name, usertag, bio, location, website, profileVisibility } = await request.json();
 
+    // Валидация
+    if (!name || !usertag) {
+      return NextResponse.json(
+        { message: 'Имя и usertag обязательны' },
+        { status: 400 }
+      );
+    }
+
+    if (usertag.length < 3 || usertag.length > 20) {
+      return NextResponse.json(
+        { message: 'Usertag должен быть от 3 до 20 символов' },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[a-z0-9-]+$/.test(usertag)) {
+      return NextResponse.json(
+        { message: 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем, не занят ли usertag другим пользователем
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        usertag,
+        NOT: {
+          id: decoded.userId
+        }
+      }
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { message: 'Этот usertag уже занят' },
+        { status: 409 }
+      );
+    }
+
+    // Обновляем профиль
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
       data: {
-        ...(name && { name }),
-        ...(bio !== undefined && { bio }),
-        ...(location !== undefined && { location }),
-        ...(website !== undefined && { website }),
-        ...(profileVisibility !== undefined && { profileVisibility }),
-        ...(avatar !== undefined && { avatar }),
-        ...(banner !== undefined && { banner })
+        name,
+        usertag,
+        bio,
+        location,
+        website,
+        profileVisibility
       },
       select: {
         id: true,
         name: true,
+        usertag: true,
         email: true,
         avatar: true,
         banner: true,
@@ -215,6 +248,14 @@ export async function PUT(request) {
 
   } catch (error) {
     console.error('Ошибка обновления профиля:', error);
+    
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { message: 'Этот usertag уже занят' },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }

@@ -1,0 +1,3174 @@
+ОТЧЕТ О ФАЙЛАХ
+Папка: /OTPUSK/otpusk-app/Holidays/src/app/api
+Дата создания: 10/18/2025, 1:57:23 AM
+Всего файлов: 28
+Исключенные папки: api, node_modules, dist, build, .git, .next, cache, temp
+Исключенные файлы: global.css, favicon.ico
+================================================================================
+
+
+================================================================================
+ФАЙЛ: activities/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/activities/route.js
+РАЗМЕР: 2924 символов
+================================================================================
+
+// src/app/api/activities/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { title, description, date, type, vacationId, locationId } = await request.json();
+
+    if (!title || !date || !type || !vacationId) {
+      return NextResponse.json(
+        { message: 'Обязательные поля: название, дата, тип и ID отпуска' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем доступ к отпуску
+    const vacationAccess = await prisma.vacation.findFirst({
+      where: {
+        id: vacationId,
+        OR: [
+          { userId: decoded.userId },
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+        ]
+      }
+    });
+
+    if (!vacationAccess) {
+      return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
+    }
+
+    // Создаем активность
+    const activity = await prisma.activity.create({
+      data: {
+        title,
+        description,
+        date: new Date(date),
+        type,
+        vacationId,
+        locationId: locationId || null
+      },
+      include: {
+        location: {
+          select: { id: true, name: true, address: true }
+        },
+        participants: {
+          include: {
+            user: {
+              select: { id: true, name: true, avatar: true }
+            }
+          }
+        }
+      }
+    });
+
+    // Автоматически добавляем создателя как участника
+    await prisma.activityParticipant.create({
+      data: {
+        activityId: activity.id,
+        userId: decoded.userId,
+        status: 'going'
+      }
+    });
+
+    // Обновляем активность с участниками
+    const updatedActivity = await prisma.activity.findUnique({
+      where: { id: activity.id },
+      include: {
+        location: {
+          select: { id: true, name: true, address: true }
+        },
+        participants: {
+          include: {
+            user: {
+              select: { id: true, name: true, avatar: true }
+            }
+          }
+        }
+      }
+    });
+
+    // Форматируем для ответа
+    const formattedActivity = {
+      ...updatedActivity,
+      author: updatedActivity.participants[0]?.user || null,
+      participants: updatedActivity.participants.map(p => p.user)
+    };
+
+    return NextResponse.json(formattedActivity, { status: 201 });
+
+  } catch (error) {
+    console.error('Ошибка создания активности:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/login/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/login/route.js
+РАЗМЕР: 2408 символов
+================================================================================
+
+// src/app/api/auth/login/route.js
+import { NextResponse } from 'next/server';
+import { verifyPassword, createSession } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const { email, password, rememberMe = false } = await request.json();
+
+    // Валидация
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: 'Email и пароль обязательны' },
+        { status: 400 }
+      );
+    }
+
+    // Поиск пользователя
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Неверный email или пароль' },
+        { status: 401 }
+      );
+    }
+
+    // Проверка пароля
+    const isPasswordValid = await verifyPassword(password, user.password);
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        { message: 'Неверный email или пароль' },
+        { status: 401 }
+      );
+    }
+
+    // Получаем информацию о клиенте
+    const userAgent = request.headers.get('user-agent');
+    const ipAddress = request.headers.get('x-forwarded-for') || request.ip;
+
+    // Создаем сессию с учетом rememberMe
+    const { accessToken, refreshToken, sessionId } = await createSession(
+      user.id, 
+      userAgent, 
+      ipAddress,
+      rememberMe
+    );
+
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt
+    };
+
+    const response = NextResponse.json(
+      { 
+        message: 'Вход выполнен успешно',
+        user: userData
+      },
+      { status: 200 }
+    );
+
+    // Устанавливаем httpOnly куки с разным временем жизни
+    response.cookies.set('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000 // 1 час
+    });
+
+    response.cookies.set('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: rememberMe 
+        ? 365 * 24 * 60 * 60 * 1000 // 1 год для "Запомнить меня"
+        : 30 * 24 * 60 * 60 * 1000 // 30 дней для обычной сессии
+    });
+
+    return response;
+
+  } catch (error) {
+    console.error('Ошибка входа:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/logout/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/logout/route.js
+РАЗМЕР: 1175 символов
+================================================================================
+
+// src/app/api/auth/logout/route.js
+import { NextResponse } from 'next/server';
+import { deleteSession } from '../../../../lib/auth';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (accessToken) {
+      const { verifyAccessToken } = await import('../../../../lib/auth');
+      const decoded = verifyAccessToken(accessToken);
+      
+      if (decoded?.sessionId) {
+        await deleteSession(decoded.sessionId);
+      }
+    }
+
+    const response = NextResponse.json(
+      { message: 'Выход выполнен успешно' },
+      { status: 200 }
+    );
+
+    // Очищаем куки
+    response.cookies.set('accessToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0
+    });
+
+    response.cookies.set('refreshToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 0
+    });
+
+    return response;
+
+  } catch (error) {
+    console.error('Ошибка выхода:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/me/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/me/route.js
+РАЗМЕР: 1665 символов
+================================================================================
+
+// src/app/api/auth/me/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function GET(request) {
+  try {
+    console.log('🔍 Checking auth...');
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+    console.log('Access token exists:', !!accessToken);
+
+    if (!accessToken) {
+      console.log('❌ No access token');
+      return NextResponse.json(
+        { message: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    console.log('Decoded token:', decoded);
+
+    if (!decoded) {
+      console.log('❌ Invalid token');
+      return NextResponse.json(
+        { message: 'Недействительный токен' },
+        { status: 401 }
+      );
+    }
+
+    // Получаем пользователя из базы с usertag
+    console.log('👤 Fetching user:', decoded.userId);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        name: true,
+        usertag: true, // ДОБАВЛЕНО
+        email: true,
+        avatar: true,
+        createdAt: true
+      }
+    });
+
+    console.log('User found:', !!user);
+    console.log('User usertag:', user?.usertag);
+
+    if (!user) {
+      return NextResponse.json(
+        { message: 'Пользователь не найден' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(user);
+
+  } catch (error) {
+    console.error('❌ Ошибка получения пользователя:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/refresh/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/refresh/route.js
+РАЗМЕР: 1271 символов
+================================================================================
+
+// src/app/api/auth/refresh/route.js
+import { NextResponse } from 'next/server';
+import { verifySession, generateAccessToken } from '../../../../lib/auth';
+
+export async function POST(request) {
+  try {
+    const refreshToken = request.cookies.get('refreshToken')?.value;
+
+    if (!refreshToken) {
+      return NextResponse.json(
+        { message: 'Refresh token не найден' },
+        { status: 401 }
+      );
+    }
+
+    // Проверяем сессию
+    const session = await verifySession(refreshToken);
+    if (!session) {
+      return NextResponse.json(
+        { message: 'Недействительная сессия' },
+        { status: 401 }
+      );
+    }
+
+    // Генерируем новый access token
+    const newAccessToken = generateAccessToken(session.userId, session.id);
+
+    const response = NextResponse.json(
+      { message: 'Token обновлен' },
+      { status: 200 }
+    );
+
+    response.cookies.set('accessToken', newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000 // 1 час
+    });
+
+    return response;
+
+  } catch (error) {
+    console.error('Ошибка обновления токена:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/register/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/register/route.js
+РАЗМЕР: 3926 символов
+================================================================================
+
+// src/app/api/auth/register/route.js (обновленная версия)
+import { NextResponse } from 'next/server';
+import { hashPassword, createSession } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const { name, usertag, email, password, rememberMe = false } = await request.json();
+
+    // Валидация
+    if (!name || !usertag || !email || !password) {
+      return NextResponse.json(
+        { message: 'Все поля обязательны для заполнения' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { message: 'Пароль должен содержать минимум 6 символов' },
+        { status: 400 }
+      );
+    }
+
+    // Проверка формата usertag
+    if (!/^[a-z0-9-]+$/.test(usertag)) {
+      return NextResponse.json(
+        { message: 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы' },
+        { status: 400 }
+      );
+    }
+
+    if (usertag.length < 3 || usertag.length > 20) {
+      return NextResponse.json(
+        { message: 'Usertag должен быть от 3 до 20 символов' },
+        { status: 400 }
+      );
+    }
+
+    // Проверка существующего пользователя по email и usertag
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { usertag }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      if (existingUser.email === email) {
+        return NextResponse.json(
+          { message: 'Пользователь с таким email уже существует' },
+          { status: 409 }
+        );
+      }
+      if (existingUser.usertag === usertag) {
+        return NextResponse.json(
+          { message: 'Этот usertag уже занят' },
+          { status: 409 }
+        );
+      }
+    }
+
+    // Хеширование пароля
+    const hashedPassword = await hashPassword(password);
+
+    // Создание пользователя
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        usertag,
+        email,
+        password: hashedPassword,
+      },
+      select: {
+        id: true,
+        name: true,
+        usertag: true,
+        email: true,
+        createdAt: true
+      }
+    });
+
+    // Получаем информацию о клиенте
+    const userAgent = request.headers.get('user-agent');
+    const ipAddress = request.headers.get('x-forwarded-for') || request.ip;
+
+    // Создаем сессию с учетом rememberMe
+    const { accessToken, refreshToken, sessionId } = await createSession(
+      newUser.id, 
+      userAgent, 
+      ipAddress,
+      rememberMe
+    );
+
+    const response = NextResponse.json(
+      { 
+        message: 'Пользователь успешно зарегистрирован',
+        user: newUser
+      },
+      { status: 201 }
+    );
+
+    // Устанавливаем httpOnly куки с разным временем жизни
+    response.cookies.set('accessToken', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000 // 1 час
+    });
+
+    response.cookies.set('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: rememberMe 
+        ? 365 * 24 * 60 * 60 * 1000 // 1 год для "Запомнить меня"
+        : 30 * 24 * 60 * 60 * 1000 // 30 дней для обычной сессии
+    });
+
+    return response;
+
+  } catch (error) {
+    console.error('Ошибка регистрации:', error);
+    
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0];
+      if (field === 'email') {
+        return NextResponse.json(
+          { message: 'Пользователь с таким email уже существует' },
+          { status: 409 }
+        );
+      }
+      if (field === 'usertag') {
+        return NextResponse.json(
+          { message: 'Этот usertag уже занят' },
+          { status: 409 }
+        );
+      }
+    }
+
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/sessions/all/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/sessions/all/route.js
+РАЗМЕР: 1334 символов
+================================================================================
+
+// src/app/api/auth/sessions/all/route.js
+import { NextResponse } from 'next/server';
+import { deleteAllUserSessions } from '../../../../../lib/auth';
+import { verifyAccessToken } from '../../../../../lib/auth';
+
+// Удалить все сессии пользователя (кроме текущей)
+export async function DELETE(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { message: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json(
+        { message: 'Недействительный токен' },
+        { status: 401 }
+      );
+    }
+
+    // Получаем все сессии пользователя
+    const { getUserSessions, deleteSession } = await import('../../../../../lib/auth');
+    const sessions = await getUserSessions(decoded.userId);
+
+    // Удаляем все сессии кроме текущей
+    for (const session of sessions) {
+      if (session.id !== decoded.sessionId) {
+        await deleteSession(session.id);
+      }
+    }
+
+    return NextResponse.json({ message: 'Все другие сессии удалены' });
+
+  } catch (error) {
+    console.error('Ошибка удаления сессий:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: auth/sessions/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/auth/sessions/route.js
+РАЗМЕР: 1817 символов
+================================================================================
+
+// src/app/api/auth/sessions/route.js
+import { NextResponse } from 'next/server';
+import { getUserSessions, deleteSession, deleteAllUserSessions } from '../../../../lib/auth';
+import { verifyAccessToken } from '../../../../lib/auth';
+
+// Получить все активные сессии пользователя
+export async function GET(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { message: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json(
+        { message: 'Недействительный токен' },
+        { status: 401 }
+      );
+    }
+
+    const sessions = await getUserSessions(decoded.userId);
+
+    return NextResponse.json({ sessions });
+
+  } catch (error) {
+    console.error('Ошибка получения сессий:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+// Удалить конкретную сессию
+export async function DELETE(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+    const { sessionId } = await request.json();
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { message: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json(
+        { message: 'Недействительный токен' },
+        { status: 401 }
+      );
+    }
+
+    await deleteSession(sessionId);
+
+    return NextResponse.json({ message: 'Сессия удалена' });
+
+  } catch (error) {
+    console.error('Ошибка удаления сессии:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: friends/request/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/friends/request/route.js
+РАЗМЕР: 3203 символов
+================================================================================
+
+// src/app/api/friends/request/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { userId } = await request.json();
+
+    if (!userId) {
+      return NextResponse.json({ message: 'User ID обязателен' }, { status: 400 });
+    }
+
+    // Нельзя отправить запрос самому себе
+    if (userId === decoded.userId) {
+      return NextResponse.json(
+        { message: 'Нельзя отправить запрос в друзья самому себе' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем существование пользователя
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (!targetUser) {
+      return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+    }
+
+    // Проверяем, не отправили ли уже запрос
+    const existingRequest = await prisma.friendRequest.findFirst({
+      where: {
+        senderId: decoded.userId,
+        receiverId: userId
+      }
+    });
+
+    if (existingRequest) {
+      return NextResponse.json(
+        { message: 'Запрос в друзья уже отправлен' },
+        { status: 409 }
+      );
+    }
+
+    // Проверяем, не являются ли уже друзьями
+    const existingFriendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { user1Id: decoded.userId, user2Id: userId },
+          { user1Id: userId, user2Id: decoded.userId }
+        ]
+      }
+    });
+
+    if (existingFriendship) {
+      return NextResponse.json(
+        { message: 'Пользователь уже у вас в друзьях' },
+        { status: 409 }
+      );
+    }
+
+    // Создаем запрос в друзья
+    const friendRequest = await prisma.friendRequest.create({
+      data: {
+        senderId: decoded.userId,
+        receiverId: userId,
+        status: 'PENDING'
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            usertag: true
+          }
+        }
+      }
+    });
+
+    // Создаем уведомление для получателя
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        type: 'friend_request',
+        title: 'Новый запрос в друзья',
+        message: `${friendRequest.sender.name} хочет добавить вас в друзья`,
+        data: {
+          requestId: friendRequest.id,
+          senderId: decoded.userId,
+          senderName: friendRequest.sender.name,
+          senderAvatar: friendRequest.sender.avatar
+        }
+      }
+    });
+
+    return NextResponse.json({
+      message: 'Запрос в друзья отправлен',
+      request: friendRequest
+    });
+
+  } catch (error) {
+    console.error('Ошибка отправки запроса в друзья:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: friends/respond/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/friends/respond/route.js
+РАЗМЕР: 3626 символов
+================================================================================
+
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { requestId, accept } = await request.json();
+
+    console.log('📨 Обработка запроса дружбы:', { requestId, accept, userId: decoded.userId });
+
+    if (!requestId) {
+      return NextResponse.json({ message: 'Request ID обязателен' }, { status: 400 });
+    }
+
+    // Находим запрос
+    const friendRequest = await prisma.friendRequest.findFirst({
+      where: {
+        id: requestId,
+        receiverId: decoded.userId,
+        status: 'PENDING'
+      },
+      include: {
+        sender: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            usertag: true
+          }
+        },
+        receiver: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            usertag: true
+          }
+        }
+      }
+    });
+
+    console.log('🔍 Найден запрос дружбы:', friendRequest);
+
+    if (!friendRequest) {
+      return NextResponse.json({ message: 'Запрос не найден' }, { status: 404 });
+    }
+
+    if (accept) {
+      // Принимаем запрос - создаем дружбу
+      const result = await prisma.$transaction(async (tx) => {
+        // Создаем запись о дружбе (убедимся, что user1Id всегда меньше user2Id для уникальности)
+        const user1Id = friendRequest.senderId < decoded.userId ? friendRequest.senderId : decoded.userId;
+        const user2Id = friendRequest.senderId < decoded.userId ? decoded.userId : friendRequest.senderId;
+
+        console.log('👥 Создаем дружбу между:', { user1Id, user2Id });
+
+        const friendship = await tx.friendship.create({
+          data: {
+            user1Id,
+            user2Id
+          }
+        });
+
+        // Обновляем статус запроса
+        await tx.friendRequest.update({
+          where: { id: requestId },
+          data: { status: 'ACCEPTED' }
+        });
+
+        // Создаем уведомление для отправителя
+        await tx.notification.create({
+          data: {
+            userId: friendRequest.senderId,
+            type: 'friend_request_accepted',
+            title: 'Запрос в друзья принят',
+            message: `${friendRequest.receiver.name} принял(а) ваш запрос в друзья`,
+            data: {
+              friendId: decoded.userId,
+              friendName: friendRequest.receiver.name,
+              friendAvatar: friendRequest.receiver.avatar,
+              friendUsertag: friendRequest.receiver.usertag
+            }
+          }
+        });
+
+        return friendship;
+      });
+
+      console.log('✅ Запрос дружбы принят:', result);
+
+      return NextResponse.json({ 
+        message: 'Запрос в друзья принят',
+        friendship: result
+      });
+
+    } else {
+      // Отклоняем запрос
+      await prisma.friendRequest.update({
+        where: { id: requestId },
+        data: { status: 'REJECTED' }
+      });
+
+      console.log('❌ Запрос дружбы отклонен');
+
+      return NextResponse.json({ message: 'Запрос в друзья отклонен' });
+    }
+
+  } catch (error) {
+    console.error('❌ Ошибка обработки запроса в друзья:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: friends/status/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/friends/status/route.js
+РАЗМЕР: 2043 символов
+================================================================================
+
+// src/app/api/friends/status/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const targetUserId = searchParams.get('targetUserId');
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    if (!targetUserId) {
+      return NextResponse.json({ message: 'Target User ID обязателен' }, { status: 400 });
+    }
+
+    // Проверяем дружбу
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { user1Id: decoded.userId, user2Id: targetUserId },
+          { user1Id: targetUserId, user2Id: decoded.userId }
+        ]
+      }
+    });
+
+    if (friendship) {
+      return NextResponse.json({ status: 'friends' });
+    }
+
+    // Проверяем исходящий запрос
+    const outgoingRequest = await prisma.friendRequest.findFirst({
+      where: {
+        senderId: decoded.userId,
+        receiverId: targetUserId,
+        status: 'PENDING'
+      }
+    });
+
+    if (outgoingRequest) {
+      return NextResponse.json({ status: 'pending' });
+    }
+
+    // Проверяем входящий запрос
+    const incomingRequest = await prisma.friendRequest.findFirst({
+      where: {
+        senderId: targetUserId,
+        receiverId: decoded.userId,
+        status: 'PENDING'
+      }
+    });
+
+    if (incomingRequest) {
+      return NextResponse.json({ status: 'incoming' });
+    }
+
+    return NextResponse.json({ status: 'none' });
+
+  } catch (error) {
+    console.error('Ошибка проверки статуса дружбы:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: invitations/[id]/respond/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/invitations/[id]/respond/route.js
+РАЗМЕР: 4777 символов
+================================================================================
+
+// src/app/api/invitations/[id]/respond/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(request, { params }) {
+  try {
+    const { id: invitationId } = await params;
+    const { accept } = await request.json();
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Получаем информацию о пользователе из базы
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, name: true, email: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+    }
+
+    // Находим приглашение
+    const invitation = await prisma.invitation.findFirst({
+      where: {
+        id: invitationId,
+        email: user.email // Используем email из базы данных
+      },
+      include: {
+        vacation: true,
+        invitedBy: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (!invitation) {
+      return NextResponse.json({ message: 'Приглашение не найдено' }, { status: 404 });
+    }
+
+    if (invitation.status !== 'pending') {
+      return NextResponse.json({ message: 'Приглашение уже обработано' }, { status: 400 });
+    }
+
+    if (new Date() > invitation.expiresAt) {
+      return NextResponse.json({ message: 'Приглашение истекло' }, { status: 400 });
+    }
+
+    if (accept) {
+      // Принимаем приглашение
+      await prisma.$transaction(async (tx) => {
+        // Добавляем пользователя как участника
+        await tx.vacationMember.create({
+          data: {
+            vacationId: invitation.vacationId,
+            userId: user.id,
+            role: 'member',
+            status: 'accepted',
+            joinedAt: new Date()
+          }
+        });
+
+        // Обновляем статус приглашения
+        await tx.invitation.update({
+          where: { id: invitationId },
+          data: { status: 'accepted' }
+        });
+
+        // Создаем уведомление для владельца
+        await tx.notification.create({
+          data: {
+            userId: invitation.invitedById,
+            type: 'info',
+            title: 'Приглашение принято',
+            message: `${user.name} принял(а) ваше приглашение в отпуск "${invitation.vacation.title}"`,
+            data: {
+              vacationId: invitation.vacationId,
+              acceptedByName: user.name
+            }
+          }
+        });
+
+        // Обновляем уведомление приглашенного пользователя
+        await tx.notification.updateMany({
+          where: {
+            userId: user.id,
+            type: 'invitation',
+            data: {
+              path: ['invitationId'],
+              equals: invitationId
+            }
+          },
+          data: {
+            data: {
+              ...invitation.data,
+              status: 'accepted'
+            }
+          }
+        });
+      });
+
+      return NextResponse.json({ 
+        message: 'Приглашение принято',
+        vacationId: invitation.vacationId
+      });
+    } else {
+      // Отклоняем приглашение
+      await prisma.$transaction(async (tx) => {
+        // Обновляем статус приглашения
+        await tx.invitation.update({
+          where: { id: invitationId },
+          data: { status: 'rejected' }
+        });
+
+        // Создаем уведомление для владельца
+        await tx.notification.create({
+          data: {
+            userId: invitation.invitedById,
+            type: 'info',
+            title: 'Приглашение отклонено',
+            message: `${user.name} отклонил(а) ваше приглашение в отпуск "${invitation.vacation.title}"`,
+            data: {
+              vacationId: invitation.vacationId,
+              rejectedByName: user.name
+            }
+          }
+        });
+
+        // Обновляем уведомление приглашенного пользователя
+        await tx.notification.updateMany({
+          where: {
+            userId: user.id,
+            type: 'invitation',
+            data: {
+              path: ['invitationId'],
+              equals: invitationId
+            }
+          },
+          data: {
+            data: {
+              ...invitation.data,
+              status: 'rejected'
+            }
+          }
+        });
+      });
+
+      return NextResponse.json({ message: 'Приглашение отклонено' });
+    }
+
+  } catch (error) {
+    console.error('Ошибка обработки приглашения:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: memories/capture/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/memories/capture/route.js
+РАЗМЕР: 3546 символов
+================================================================================
+
+// src/app/api/memories/capture/route.js
+import { NextResponse } from 'next/server';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { verifyAccessToken } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const formData = await request.formData();
+    const vacationId = formData.get('vacationId');
+    const photos = formData.getAll('photos');
+
+    if (!vacationId || photos.length === 0) {
+      return NextResponse.json(
+        { message: 'Отсутствуют обязательные данные' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем доступ к отпуску
+    const vacationAccess = await prisma.vacation.findFirst({
+      where: {
+        id: vacationId,
+        OR: [
+          { userId: decoded.userId },
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+        ]
+      }
+    });
+
+    if (!vacationAccess) {
+      return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
+    }
+
+    // Проверяем лимит фотографий на день (3 фото)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayMemories = await prisma.memory.count({
+      where: {
+        vacationId,
+        authorId: decoded.userId,
+        createdAt: {
+          gte: today,
+          lt: tomorrow
+        }
+      }
+    });
+
+    if (todayMemories + photos.length > 3) {
+      return NextResponse.json(
+        { message: 'Превышен лимит в 3 фотографии в день' },
+        { status: 400 }
+      );
+    }
+
+    const createdMemories = [];
+
+    // Создаем директорию для загрузок если её нет
+    const uploadDir = join(process.cwd(), 'public', 'uploads', 'memories');
+    try {
+      await mkdir(uploadDir, { recursive: true });
+    } catch (error) {
+      // Директория уже существует
+    }
+
+    for (const photo of photos) {
+      const bytes = await photo.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      
+      // Генерируем уникальное имя файла
+      const timestamp = Date.now();
+      const filename = `${timestamp}-${photo.name}`;
+      const filepath = join(uploadDir, filename);
+
+      // Сохраняем файл
+      await writeFile(filepath, buffer);
+
+      // Создаем запись в базе
+      const memory = await prisma.memory.create({
+        data: {
+          title: `Фото дня - ${new Date().toLocaleDateString('ru-RU')}`,
+          description: 'Запечатленный момент',
+          imageUrl: `/uploads/memories/${filename}`,
+          takenAt: new Date(),
+          vacationId,
+          authorId: decoded.userId,
+          tags: ['captured_moment']
+        },
+        include: {
+          author: {
+            select: { id: true, name: true, avatar: true }
+          }
+        }
+      });
+
+      createdMemories.push(memory);
+    }
+
+    return NextResponse.json({ 
+      message: 'Фотографии успешно сохранены',
+      memories: createdMemories 
+    }, { status: 201 });
+
+  } catch (error) {
+    console.error('Ошибка сохранения фотографий:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/invite/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/notifications/invite/route.js
+РАЗМЕР: 1259 символов
+================================================================================
+
+// src/app/api/notifications/invite/route.js
+import { NextResponse } from 'next/server';
+import { prisma } from '../../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const { userId, vacationId, invitedByName, vacationTitle } = await request.json();
+
+    if (!userId || !vacationId || !invitedByName) {
+      return NextResponse.json(
+        { message: 'Отсутствуют обязательные данные' },
+        { status: 400 }
+      );
+    }
+
+    // Создаем уведомление о приглашении
+    const notification = await prisma.notification.create({
+      data: {
+        userId,
+        type: 'invitation',
+        title: 'Приглашение в отпуск',
+        message: `${invitedByName} пригласил(а) вас в отпуск "${vacationTitle}"`,
+        data: {
+          vacationId,
+          invitedByName,
+          vacationTitle
+        }
+      },
+      include: {
+        user: {
+          select: { 
+            id: true, 
+            name: true, 
+            avatar: true 
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(notification, { status: 201 });
+
+  } catch (error) {
+    console.error('Ошибка создания уведомления:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/notifications/route.js
+РАЗМЕР: 2505 символов
+================================================================================
+
+// src/app/api/notifications/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+
+// Получить уведомления пользователя
+export async function GET(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const notifications = await prisma.notification.findMany({
+      where: { 
+        userId: decoded.userId 
+      },
+      orderBy: { 
+        createdAt: 'desc' 
+      },
+      include: {
+        user: {
+          select: { 
+            id: true, 
+            name: true, 
+            avatar: true 
+          }
+        }
+      },
+      take: 50
+    });
+
+    return NextResponse.json(notifications);
+
+  } catch (error) {
+    console.error('Ошибка получения уведомлений:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+// Пометить уведомления как прочитанные
+export async function PUT(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { notificationIds } = await request.json();
+
+    if (notificationIds && notificationIds.length > 0) {
+      // Пометить конкретные уведомления как прочитанные
+      await prisma.notification.updateMany({
+        where: { 
+          id: { in: notificationIds },
+          userId: decoded.userId 
+        },
+        data: { isRead: true }
+      });
+    } else {
+      // Пометить все как прочитанные
+      await prisma.notification.updateMany({
+        where: { 
+          userId: decoded.userId,
+          isRead: false 
+        },
+        data: { isRead: true }
+      });
+    }
+
+    return NextResponse.json({ message: 'Уведомления помечены как прочитанные' });
+
+  } catch (error) {
+    console.error('Ошибка обновления уведомлений:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: notifications/test/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/notifications/test/route.js
+РАЗМЕР: 2783 символов
+================================================================================
+
+// src/app/api/notifications/test/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { type = 'info' } = await request.json();
+
+    // Создаем тестовое уведомление
+    let notificationData;
+
+    switch (type) {
+      case 'invitation':
+        notificationData = {
+          userId: decoded.userId,
+          type: 'invitation',
+          title: 'Приглашение в отпуск',
+          message: 'Анна пригласила вас в отпуск "Отдых на Бали"',
+          data: {
+            invitationId: 'test-invitation-123',
+            vacationId: 'test-vacation-456',
+            invitedByName: 'Анна',
+            vacationTitle: 'Отдых на Бали'
+          }
+        };
+        break;
+
+      case 'activity_update':
+        notificationData = {
+          userId: decoded.userId,
+          type: 'activity_update',
+          title: 'Обновление планов',
+          message: 'В вашем отпуске "Горные походы" добавлена новая активность',
+          data: {
+            vacationId: 'test-vacation-789',
+            activityId: 'test-activity-123'
+          }
+        };
+        break;
+
+      case 'memory_comment':
+        notificationData = {
+          userId: decoded.userId,
+          type: 'memory_comment',
+          title: 'Новый комментарий',
+          message: 'Иван прокомментировал ваше воспоминание',
+          data: {
+            memoryId: 'test-memory-123',
+            commentId: 'test-comment-456'
+          }
+        };
+        break;
+
+      default:
+        notificationData = {
+          userId: decoded.userId,
+          type: 'info',
+          title: 'Тестовое уведомление',
+          message: 'Это тестовое уведомление для проверки системы',
+          data: {
+            test: true
+          }
+        };
+    }
+
+    const notification = await prisma.notification.create({
+      data: notificationData,
+      include: {
+        user: {
+          select: { 
+            id: true, 
+            name: true, 
+            avatar: true 
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      message: 'Тестовое уведомление создано',
+      notification
+    });
+
+  } catch (error) {
+    console.error('Ошибка создания тестового уведомления:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: profile/posts/[id]/like/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/profile/posts/[id]/like/route.js
+РАЗМЕР: 1929 символов
+================================================================================
+
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
+
+export async function POST(request, { params }) {
+  try {
+    const { id: postId } = await params;
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Проверяем существование поста
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        likes: {
+          where: { userId: decoded.userId }
+        }
+      }
+    });
+
+    if (!post) {
+      return NextResponse.json({ message: 'Запись не найдена' }, { status: 404 });
+    }
+
+    const isLiked = post.likes.length > 0;
+
+    if (isLiked) {
+      // Удаляем лайк
+      await prisma.postLike.deleteMany({
+        where: {
+          postId: postId,
+          userId: decoded.userId
+        }
+      });
+    } else {
+      // Добавляем лайк
+      await prisma.postLike.create({
+        data: {
+          postId: postId,
+          userId: decoded.userId
+        }
+      });
+    }
+
+    // Получаем обновленное количество лайков
+    const updatedPost = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        likes: {
+          select: { userId: true }
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      liked: !isLiked,
+      likesCount: updatedPost._count.likes
+    });
+
+  } catch (error) {
+    console.error('Ошибка лайка записи:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: profile/posts/[id]/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/profile/posts/[id]/route.js
+РАЗМЕР: 2003 символов
+================================================================================
+
+// src/app/api/profile/posts/[id]/like/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../../lib/auth';
+import { prisma } from '../../../../../lib/prisma';
+
+export async function POST(request, { params }) {
+  try {
+    const { id: postId } = await params;
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Проверяем, существует ли пост
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        likes: {
+          where: { userId: decoded.userId }
+        }
+      }
+    });
+
+    if (!post) {
+      return NextResponse.json({ message: 'Запись не найдена' }, { status: 404 });
+    }
+
+    const isLiked = post.likes.length > 0;
+
+    if (isLiked) {
+      // Удаляем лайк
+      await prisma.postLike.deleteMany({
+        where: {
+          postId: postId,
+          userId: decoded.userId
+        }
+      });
+    } else {
+      // Добавляем лайк
+      await prisma.postLike.create({
+        data: {
+          postId: postId,
+          userId: decoded.userId
+        }
+      });
+    }
+
+    // Получаем обновленное количество лайков
+    const updatedPost = await prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        likes: {
+          select: { userId: true }
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({
+      liked: !isLiked,
+      likesCount: updatedPost._count.likes
+    });
+
+  } catch (error) {
+    console.error('Ошибка лайка записи:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: profile/posts/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/profile/posts/route.js
+РАЗМЕР: 4666 символов
+================================================================================
+
+// src/app/api/profile/posts/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    if (!userId) {
+      return NextResponse.json({ message: 'User ID обязателен' }, { status: 400 });
+    }
+
+    // Находим пользователя и проверяем настройки приватности
+    const profileUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { 
+        id: true,
+        profileVisibility: true 
+      }
+    });
+
+    if (!profileUser) {
+      return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+    }
+
+    const currentUserId = decoded.userId;
+    const isOwnProfile = currentUserId === userId;
+
+    // Проверяем видимость постов
+    let canViewPosts = false;
+    
+    if (isOwnProfile) {
+      canViewPosts = true;
+    } else {
+      switch (profileUser.profileVisibility) {
+        case 'PUBLIC':
+          canViewPosts = true;
+          break;
+        case 'FRIENDS_ONLY':
+          // Проверяем дружбу
+          const friendship = await prisma.friendship.findFirst({
+            where: {
+              OR: [
+                { user1Id: currentUserId, user2Id: userId },
+                { user1Id: userId, user2Id: currentUserId }
+              ]
+            }
+          });
+          canViewPosts = !!friendship;
+          break;
+        case 'PRIVATE':
+          canViewPosts = false;
+          break;
+      }
+    }
+
+    if (!canViewPosts) {
+      return NextResponse.json([], { status: 200 });
+    }
+
+    // Получаем посты
+    const posts = await prisma.post.findMany({
+      where: { authorId: userId },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            usertag: true
+          }
+        },
+        likes: {
+          select: {
+            userId: true
+          }
+        },
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'asc'
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    return NextResponse.json(posts);
+
+  } catch (error) {
+    console.error('Ошибка получения постов:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { content } = await request.json();
+
+    if (!content || content.trim().length === 0) {
+      return NextResponse.json(
+        { message: 'Содержание обязательно' },
+        { status: 400 }
+      );
+    }
+
+    if (content.length > 500) {
+      return NextResponse.json(
+        { message: 'Содержание не должно превышать 500 символов' },
+        { status: 400 }
+      );
+    }
+
+    // Создаем пост
+    const post = await prisma.post.create({
+      data: {
+        content: content.trim(),
+        authorId: decoded.userId
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+            usertag: true
+          }
+        },
+        likes: {
+          select: {
+            userId: true
+          }
+        },
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(post, { status: 201 });
+
+  } catch (error) {
+    console.error('Ошибка создания поста:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: profile/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/profile/route.js
+РАЗМЕР: 6736 символов
+================================================================================
+
+// src/app/api/profile/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+import { getUserGroup, getLevelProgress } from '../../../lib/userLevels';
+
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const usertag = searchParams.get('usertag');
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    if (!usertag) {
+      return NextResponse.json({ message: 'Usertag обязателен' }, { status: 400 });
+    }
+
+    // Находим пользователя по usertag
+    const user = await prisma.user.findUnique({
+      where: { usertag },
+      select: {
+        id: true,
+        name: true,
+        usertag: true,
+        email: true,
+        avatar: true,
+        banner: true,
+        bio: true,
+        location: true,
+        website: true,
+        experiencePoints: true,
+        createdAt: true,
+        profileVisibility: true,
+      }
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: 'Пользователь не найден' }, { status: 404 });
+    }
+
+    const isOwnProfile = decoded.userId === user.id;
+
+    // Проверяем дружбу для определения видимости постов
+    let canViewPosts = false;
+    
+    if (isOwnProfile) {
+      canViewPosts = true;
+    } else {
+      switch (user.profileVisibility) {
+        case 'PUBLIC':
+          canViewPosts = true;
+          break;
+        case 'FRIENDS_ONLY':
+          // Проверяем, являются ли пользователи друзьями
+          const friendship = await prisma.friendship.findFirst({
+            where: {
+              OR: [
+                { user1Id: decoded.userId, user2Id: user.id },
+                { user1Id: user.id, user2Id: decoded.userId }
+              ]
+            }
+          });
+          canViewPosts = !!friendship;
+          break;
+        case 'PRIVATE':
+          canViewPosts = false;
+          break;
+      }
+    }
+
+    // Получаем посты в зависимости от прав доступа
+    let posts = [];
+    if (canViewPosts) {
+      posts = await prisma.post.findMany({
+        where: { authorId: user.id },
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: { id: true, name: true, avatar: true }
+          },
+          likes: {
+            select: { userId: true }
+          },
+          comments: {
+            select: { id: true }
+          }
+        }
+      });
+    }
+
+    // Получаем ВСЕ отпуски пользователя через vacation_members
+    const vacationMembers = await prisma.vacationMember.findMany({
+      where: {
+        userId: user.id,
+        status: 'accepted'
+      },
+      include: {
+        vacation: {
+          include: {
+            user: {
+              select: { id: true, name: true, avatar: true }
+            },
+            members: {
+              where: { status: 'accepted' },
+              include: {
+                user: {
+                  select: { id: true, name: true, avatar: true }
+                }
+              }
+            },
+            _count: {
+              select: {
+                activities: true,
+                memories: true,
+                members: true
+              }
+            }
+          }
+        }
+      },
+      orderBy: { vacation: { startDate: 'desc' } }
+    });
+
+    // Преобразуем в формат отпусков
+    const vacations = vacationMembers.map(member => ({
+      ...member.vacation,
+      userRole: member.role,
+      isOwner: member.role === 'owner'
+    }));
+
+    // Получаем информацию об уровне пользователя
+    const userGroup = await getUserGroup(user.id);
+    const levelProgress = await getLevelProgress(user.id);
+
+    // Формируем полный профиль
+    const userProfile = {
+      ...user,
+      posts,
+      vacations,
+      canViewPosts,
+      // Добавляем информацию об уровне
+      userGroup,
+      levelProgress
+    };
+
+    return NextResponse.json(userProfile);
+
+  } catch (error) {
+    console.error('Ошибка получения профиля:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+// API для обновления профиля
+export async function PUT(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { name, usertag, bio, location, website, profileVisibility } = await request.json();
+
+    // Валидация
+    if (!name || !usertag) {
+      return NextResponse.json(
+        { message: 'Имя и usertag обязательны' },
+        { status: 400 }
+      );
+    }
+
+    if (usertag.length < 3 || usertag.length > 20) {
+      return NextResponse.json(
+        { message: 'Usertag должен быть от 3 до 20 символов' },
+        { status: 400 }
+      );
+    }
+
+    if (!/^[a-z0-9-]+$/.test(usertag)) {
+      return NextResponse.json(
+        { message: 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем, не занят ли usertag другим пользователем
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        usertag,
+        NOT: {
+          id: decoded.userId
+        }
+      }
+    });
+
+    if (existingUser) {
+      return NextResponse.json(
+        { message: 'Этот usertag уже занят' },
+        { status: 409 }
+      );
+    }
+
+    // Обновляем профиль
+    const updatedUser = await prisma.user.update({
+      where: { id: decoded.userId },
+      data: {
+        name,
+        usertag,
+        bio,
+        location,
+        website,
+        profileVisibility
+      },
+      select: {
+        id: true,
+        name: true,
+        usertag: true,
+        email: true,
+        avatar: true,
+        banner: true,
+        bio: true,
+        location: true,
+        website: true,
+        profileVisibility: true,
+        createdAt: true
+      }
+    });
+
+    return NextResponse.json(updatedUser);
+
+  } catch (error) {
+    console.error('Ошибка обновления профиля:', error);
+    
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { message: 'Этот usertag уже занят' },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: profile/upload/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/profile/upload/route.js
+РАЗМЕР: 3048 символов
+================================================================================
+
+// src/app/api/profile/upload/route.js
+import { NextResponse } from 'next/server';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const formData = await request.formData();
+    const image = formData.get('image');
+    const type = formData.get('type'); // 'avatar' или 'banner'
+
+    if (!image || !type) {
+      return NextResponse.json(
+        { message: 'Отсутствуют обязательные данные' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем тип файла
+    if (!image.type.startsWith('image/')) {
+      return NextResponse.json(
+        { message: 'Файл должен быть изображением' },
+        { status: 400 }
+      );
+    }
+
+    // Проверяем размер файла (макс 5MB)
+    if (image.size > 5 * 1024 * 1024) {
+      return NextResponse.json(
+        { message: 'Размер файла не должен превышать 5MB' },
+        { status: 400 }
+      );
+    }
+
+    // Создаем директории если их нет
+    const uploadsDir = join(process.cwd(), 'public', 'uploads');
+    const avatarsDir = join(uploadsDir, 'avatars');
+    const bannersDir = join(uploadsDir, 'banners');
+    
+    await mkdir(avatarsDir, { recursive: true });
+    await mkdir(bannersDir, { recursive: true });
+
+    // Генерируем уникальное имя файла
+    const timestamp = Date.now();
+    const fileExtension = image.name.split('.').pop();
+    const filename = `${timestamp}.${fileExtension}`;
+    
+    const uploadDir = type === 'avatar' ? avatarsDir : bannersDir;
+    const filepath = join(uploadDir, filename);
+    const publicUrl = `/uploads/${type === 'avatar' ? 'avatars' : 'banners'}/${filename}`;
+
+    // Сохраняем файл
+    const bytes = await image.arrayBuffer();
+    const buffer = Buffer.from(bytes);
+    await writeFile(filepath, buffer);
+
+    // Обновляем профиль пользователя
+    const updateData = type === 'avatar' 
+      ? { avatar: publicUrl }
+      : { banner: publicUrl };
+
+    const updatedUser = await prisma.user.update({
+      where: { id: decoded.userId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        banner: true,
+        bio: true,
+        location: true,
+        website: true,
+        profileVisibility: true,
+        createdAt: true
+      }
+    });
+
+    return NextResponse.json({
+      message: 'Изображение успешно загружено',
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Ошибка загрузки изображения:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: users/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/users/route.js
+РАЗМЕР: 2694 символов
+================================================================================
+
+// src/app/api/users/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+
+export async function GET(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search') || '';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const skip = (page - 1) * limit;
+
+    // Базовые условия для поиска
+    const where = {
+      OR: [
+        { name: { contains: search, mode: 'insensitive' } },
+        { usertag: { contains: search, mode: 'insensitive' } }
+      ],
+      // Исключаем текущего пользователя
+      NOT: {
+        id: decoded.userId
+      }
+    };
+
+    console.log('🔍 Поиск пользователей с условиями:', { search, page, limit });
+
+    // Получаем пользователей с правильными полями
+    const users = await prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        usertag: true,
+        avatar: true,
+        bio: true,
+        location: true,
+        createdAt: true,
+        profileVisibility: true,
+        _count: {
+          select: {
+            vacationMembers: {
+              where: { status: 'accepted' }
+            },
+            posts: true,
+            friendsAsUser1: true,
+            friendsAsUser2: true
+          }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
+    });
+
+    console.log('✅ Найдено пользователей:', users.length);
+
+    // Форматируем данные для фронтенда
+    const formattedUsers = users.map(user => ({
+      ...user,
+      vacationCount: user._count.vacationMembers,
+      postCount: user._count.posts,
+      friendCount: user._count.friendsAsUser1 + user._count.friendsAsUser2
+    }));
+
+    // Получаем общее количество для пагинации
+    const total = await prisma.user.count({ where });
+
+    return NextResponse.json({
+      users: formattedUsers,
+      pagination: {
+        page,
+        limit,
+        total,
+        hasNext: skip + users.length < total,
+        hasPrev: page > 1
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Ошибка получения пользователей:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacations/[id]/activities/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/vacations/[id]/activities/route.js
+РАЗМЕР: 2063 символов
+================================================================================
+
+// src/app/api/vacations/[id]/activities/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../../lib/auth';
+import { prisma } from '../../../../../lib/prisma';
+
+export async function GET(request, { params }) {
+  try {
+    const { id } = await params;
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Проверяем доступ к отпуску
+    const vacationAccess = await prisma.vacation.findFirst({
+      where: {
+        id: id,
+        OR: [
+          { userId: decoded.userId },
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+        ]
+      }
+    });
+
+    if (!vacationAccess) {
+      return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
+    }
+
+    // ИСПРАВЛЕНО: правильные поля для модели Activity
+    const activities = await prisma.activity.findMany({
+      where: { vacationId: id },
+      orderBy: { date: 'asc' },
+      include: {
+        location: {
+          select: { id: true, name: true, address: true }
+        },
+        participants: {
+          include: {
+            user: {
+              select: { id: true, name: true, avatar: true }
+            }
+          }
+        }
+      }
+    });
+
+    // Преобразуем данные для удобства использования
+    const formattedActivities = activities.map(activity => ({
+      ...activity,
+      // Берем первого участника как "автора" активности
+      author: activity.participants[0]?.user || null,
+      participants: activity.participants.map(p => p.user)
+    }));
+
+    return NextResponse.json(formattedActivities);
+
+  } catch (error) {
+    console.error('Ошибка получения активностей:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacations/[id]/invite/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/vacations/[id]/invite/route.js
+РАЗМЕР: 3568 символов
+================================================================================
+
+// src/app/api/vacations/[id]/invite/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../../lib/auth';
+import { prisma } from '../../../../../lib/prisma';
+import { randomBytes } from 'crypto';
+
+export async function POST(request, { params }) {
+  try {
+    // Await params для Next.js 15
+    const { id: vacationId } = await params;
+    const { email } = await request.json();
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Проверяем, что пользователь - владелец отпуска
+    const vacation = await prisma.vacation.findFirst({
+      where: {
+        id: vacationId,
+        userId: decoded.userId
+      },
+      include: {
+        user: {
+          select: { name: true }
+        }
+      }
+    });
+
+    if (!vacation) {
+      return NextResponse.json({ message: 'Отпуск не найден или нет прав' }, { status: 404 });
+    }
+
+    // Проверяем, существует ли пользователь с таким email
+    const invitedUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!invitedUser) {
+      return NextResponse.json({ message: 'Пользователь с таким email не найден' }, { status: 404 });
+    }
+
+    // Проверяем, не приглашен ли уже этот пользователь
+    const existingInvitation = await prisma.invitation.findFirst({
+      where: {
+        vacationId,
+        email
+      }
+    });
+
+    if (existingInvitation) {
+      return NextResponse.json({ message: 'Пользователь уже приглашен' }, { status: 409 });
+    }
+
+    // Проверяем, не является ли пользователь уже участником
+    const existingMember = await prisma.vacationMember.findFirst({
+      where: {
+        vacationId,
+        userId: invitedUser.id
+      }
+    });
+
+    if (existingMember) {
+      return NextResponse.json({ message: 'Пользователь уже является участником' }, { status: 409 });
+    }
+
+    // Создаем приглашение
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 дней
+
+    const invitation = await prisma.invitation.create({
+      data: {
+        vacationId,
+        email,
+        token,
+        invitedById: decoded.userId,
+        expiresAt
+      }
+    });
+
+    // Создаем уведомление для приглашенного пользователя
+    const notification = await prisma.notification.create({
+      data: {
+        userId: invitedUser.id,
+        type: 'invitation',
+        title: 'Приглашение в отпуск',
+        message: `${vacation.user.name} пригласил(а) вас в отпуск "${vacation.title}"`,
+        data: {
+          invitationId: invitation.id,
+          vacationId: vacation.id,
+          invitedByName: vacation.user.name,
+          vacationTitle: vacation.title
+        }
+      },
+      include: {
+        user: {
+          select: { 
+            id: true, 
+            name: true, 
+            avatar: true 
+          }
+        }
+      }
+    });
+
+    return NextResponse.json({ 
+      message: 'Приглашение отправлено',
+      invitation: {
+        id: invitation.id,
+        email: invitation.email,
+        status: invitation.status
+      },
+      notification
+    });
+
+  } catch (error) {
+    console.error('Ошибка отправки приглашения:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacations/[id]/members/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/vacations/[id]/members/route.js
+РАЗМЕР: 1629 символов
+================================================================================
+
+// src/app/api/vacations/[id]/members/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../../lib/auth';
+import { prisma } from '../../../../../lib/prisma';
+
+export async function GET(request, { params }) {
+  try {
+    // Await params для Next.js 15
+    const { id } = await params;
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Проверяем доступ к отпуску
+    const vacationAccess = await prisma.vacation.findFirst({
+      where: {
+        id: id,
+        OR: [
+          { userId: decoded.userId },
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+        ]
+      }
+    });
+
+    if (!vacationAccess) {
+      return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
+    }
+
+    const members = await prisma.vacationMember.findMany({
+      where: { vacationId: id },
+      include: {
+        user: {
+          select: { 
+            id: true, 
+            name: true, 
+            email: true, 
+            avatar: true 
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
+    });
+
+    return NextResponse.json(members);
+
+  } catch (error) {
+    console.error('Ошибка получения участников:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacations/[id]/memories/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/vacations/[id]/memories/route.js
+РАЗМЕР: 1553 символов
+================================================================================
+
+// src/app/api/vacations/[id]/memories/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../../lib/auth';
+import { prisma } from '../../../../../lib/prisma';
+
+export async function GET(request, { params }) {
+  try {
+    // Await params для Next.js 15
+    const { id } = await params;
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    // Проверяем доступ к отпуску
+    const vacationAccess = await prisma.vacation.findFirst({
+      where: {
+        id: id,
+        OR: [
+          { userId: decoded.userId },
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+        ]
+      }
+    });
+
+    if (!vacationAccess) {
+      return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
+    }
+
+    const memories = await prisma.memory.findMany({
+      where: { vacationId: id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        author: {
+          select: { id: true, name: true, avatar: true }
+        }
+      }
+    });
+
+    return NextResponse.json(memories);
+
+  } catch (error) {
+    console.error('Ошибка получения воспоминаний:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacations/[id]/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/vacations/[id]/route.js
+РАЗМЕР: 3109 символов
+================================================================================
+
+// src/app/api/vacations/[id]/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../../lib/auth';
+import { prisma } from '../../../../lib/prisma';
+
+export async function GET(request, { params }) {
+  try {
+    const { id } = await params;
+    console.log('🔍 Получение отпуска с ID:', id);
+    
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      console.log('❌ Нет access token');
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      console.log('❌ Невалидный токен');
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
+    }
+
+    console.log('👤 ID пользователя:', decoded.userId);
+
+    const vacation = await prisma.vacation.findFirst({
+      where: {
+        id: id,
+        OR: [
+          { userId: decoded.userId },
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+        ]
+      },
+      include: {
+        user: {
+          select: { id: true, name: true, email: true, avatar: true }
+        },
+        members: {
+          where: { status: 'accepted' },
+          include: {
+            user: {
+              select: { id: true, name: true, email: true, avatar: true }
+            }
+          }
+        },
+        activities: {
+          orderBy: { date: 'asc' },
+          take: 10,
+          include: {
+            // ИСПРАВЛЕНО: правильные поля для модели Activity
+            location: {
+              select: { id: true, name: true, address: true }
+            },
+            participants: {
+              include: {
+                user: {
+                  select: { id: true, name: true, avatar: true }
+                }
+              }
+            }
+          }
+        },
+        memories: {
+          orderBy: { createdAt: 'desc' },
+          take: 12,
+          include: {
+            author: {
+              select: { id: true, name: true, avatar: true }
+            }
+          }
+        },
+        _count: {
+          select: {
+            activities: true,
+            memories: true,
+            members: true,
+            locations: true
+          }
+        }
+      }
+    });
+
+    if (!vacation) {
+      console.log('❌ Отпуск не найден или нет доступа');
+      return NextResponse.json({ message: 'Отпуск не найден' }, { status: 404 });
+    }
+
+    // Форматируем активности для удобства
+    const formattedVacation = {
+      ...vacation,
+      activities: vacation.activities.map(activity => ({
+        ...activity,
+        // Берем первого участника как "автора" активности
+        author: activity.participants[0]?.user || null,
+        participants: activity.participants.map(p => p.user)
+      }))
+    };
+
+    console.log('✅ Отпуск найден:', formattedVacation.title);
+    return NextResponse.json(formattedVacation);
+
+  } catch (error) {
+    console.error('❌ Ошибка получения отпуска:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+
+
+================================================================================
+ФАЙЛ: vacations/route.js
+ПОЛНЫЙ ПУТЬ: src/app/api/vacations/route.js
+РАЗМЕР: 4163 символов
+================================================================================
+
+// src/app/api/vacations/route.js
+import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '../../../lib/auth';
+import { prisma } from '../../../lib/prisma';
+
+// Получить все отпуски пользователя
+export async function GET(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { message: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json(
+        { message: 'Недействительный токен' },
+        { status: 401 }
+      );
+    }
+
+    // Получаем отпуски где пользователь является участником
+    const vacations = await prisma.vacation.findMany({
+      where: {
+        OR: [
+          { userId: decoded.userId }, // Владелец
+          { members: { some: { userId: decoded.userId, status: 'accepted' } } } // Участник
+        ]
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        members: {
+          where: {
+            status: 'accepted'
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true
+              }
+            }
+          }
+        },
+        activities: {
+          orderBy: { date: 'asc' }
+        },
+        memories: true,
+        locations: true,
+        _count: {
+          select: {
+            activities: true,
+            memories: true,
+            members: true,
+            locations: true
+          }
+        }
+      },
+      orderBy: { startDate: 'asc' }
+    });
+
+    return NextResponse.json(vacations);
+
+  } catch (error) {
+    console.error('Ошибка получения отпусков:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+// Создать новый отпуск
+export async function POST(request) {
+  try {
+    const accessToken = request.cookies.get('accessToken')?.value;
+
+    if (!accessToken) {
+      return NextResponse.json(
+        { message: 'Не авторизован' },
+        { status: 401 }
+      );
+    }
+
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json(
+        { message: 'Недействительный токен' },
+        { status: 401 }
+      );
+    }
+
+    const { title, description, destination, startDate, endDate } = await request.json();
+
+    if (!title || !startDate || !endDate) {
+      return NextResponse.json(
+        { message: 'Название и даты обязательны' },
+        { status: 400 }
+      );
+    }
+
+    // Создаем отпуск
+    const vacation = await prisma.vacation.create({
+      data: {
+        title,
+        description,
+        destination,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        userId: decoded.userId,
+        // Автоматически добавляем владельца как участника
+        members: {
+          create: {
+            userId: decoded.userId,
+            role: 'owner',
+            status: 'accepted'
+          }
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        members: {
+          where: {
+            status: 'accepted'
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true
+              }
+            }
+          }
+        },
+        activities: true,
+        memories: true,
+        locations: true,
+        _count: {
+          select: {
+            activities: true,
+            memories: true,
+            members: true,
+            locations: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(vacation, { status: 201 });
+
+  } catch (error) {
+    console.error('Ошибка создания отпуска:', error);
+    return NextResponse.json(
+      { message: 'Внутренняя ошибка сервера' },
+      { status: 500 }
+    );
+  }
+}
+
+

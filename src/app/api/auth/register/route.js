@@ -1,14 +1,14 @@
-// src/app/api/auth/register/route.js
+// src/app/api/auth/register/route.js (обновленная версия)
 import { NextResponse } from 'next/server';
 import { hashPassword, createSession } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
 
 export async function POST(request) {
   try {
-    const { name, email, password, rememberMe = false } = await request.json();
+    const { name, usertag, email, password, rememberMe = false } = await request.json();
 
     // Валидация
-    if (!name || !email || !password) {
+    if (!name || !usertag || !email || !password) {
       return NextResponse.json(
         { message: 'Все поля обязательны для заполнения' },
         { status: 400 }
@@ -22,16 +22,44 @@ export async function POST(request) {
       );
     }
 
-    // Проверка существующего пользователя
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
+    // Проверка формата usertag
+    if (!/^[a-z0-9-]+$/.test(usertag)) {
+      return NextResponse.json(
+        { message: 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы' },
+        { status: 400 }
+      );
+    }
+
+    if (usertag.length < 3 || usertag.length > 20) {
+      return NextResponse.json(
+        { message: 'Usertag должен быть от 3 до 20 символов' },
+        { status: 400 }
+      );
+    }
+
+    // Проверка существующего пользователя по email и usertag
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email },
+          { usertag }
+        ]
+      }
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { message: 'Пользователь с таким email уже существует' },
-        { status: 409 }
-      );
+      if (existingUser.email === email) {
+        return NextResponse.json(
+          { message: 'Пользователь с таким email уже существует' },
+          { status: 409 }
+        );
+      }
+      if (existingUser.usertag === usertag) {
+        return NextResponse.json(
+          { message: 'Этот usertag уже занят' },
+          { status: 409 }
+        );
+      }
     }
 
     // Хеширование пароля
@@ -41,12 +69,14 @@ export async function POST(request) {
     const newUser = await prisma.user.create({
       data: {
         name,
+        usertag,
         email,
         password: hashedPassword,
       },
       select: {
         id: true,
         name: true,
+        usertag: true,
         email: true,
         createdAt: true
       }
@@ -95,10 +125,19 @@ export async function POST(request) {
     console.error('Ошибка регистрации:', error);
     
     if (error.code === 'P2002') {
-      return NextResponse.json(
-        { message: 'Пользователь с таким email уже существует' },
-        { status: 409 }
-      );
+      const field = error.meta?.target?.[0];
+      if (field === 'email') {
+        return NextResponse.json(
+          { message: 'Пользователь с таким email уже существует' },
+          { status: 409 }
+        );
+      }
+      if (field === 'usertag') {
+        return NextResponse.json(
+          { message: 'Этот usertag уже занят' },
+          { status: 409 }
+        );
+      }
     }
 
     return NextResponse.json(

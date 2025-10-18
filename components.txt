@@ -1,7 +1,7 @@
 ОТЧЕТ О ФАЙЛАХ
 Папка: /OTPUSK/otpusk-app/Holidays/src
-Дата создания: 10/14/2025, 11:28:23 PM
-Всего файлов: 36
+Дата создания: 10/18/2025, 1:57:18 AM
+Всего файлов: 41
 Исключенные папки: app, api, node_modules, dist, build, .git, .next, cache, temp
 Исключенные файлы: global.css, favicon.ico
 ================================================================================
@@ -198,6 +198,117 @@ export default function Footer() {
 
 
 ================================================================================
+ФАЙЛ: components/FriendButton.js
+ПОЛНЫЙ ПУТЬ: src/components/FriendButton.js
+РАЗМЕР: 2679 символов
+================================================================================
+
+// src/components/FriendButton.js
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+
+export default function FriendButton({ targetUserId }) {
+  const { user } = useAuth();
+  const [friendshipStatus, setFriendshipStatus] = useState('none'); // none, pending, friends
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    checkFriendshipStatus();
+  }, [targetUserId, user]);
+
+  const checkFriendshipStatus = async () => {
+    if (!user || !targetUserId) return;
+
+    try {
+      const response = await fetch(`/api/friends/status?targetUserId=${targetUserId}`, {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFriendshipStatus(data.status);
+      }
+    } catch (error) {
+      console.error('Ошибка проверки статуса дружбы:', error);
+    }
+  };
+
+  const sendFriendRequest = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/friends/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: targetUserId }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setFriendshipStatus('pending');
+      } else {
+        alert(data.message || 'Ошибка отправки запроса');
+      }
+    } catch (error) {
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Не показывать кнопку если это свой профиль или пользователь не авторизован
+  if (!user || user.id === targetUserId) {
+    return null;
+  }
+
+  const getButtonConfig = () => {
+    switch (friendshipStatus) {
+      case 'friends':
+        return {
+          text: 'Друзья',
+          className: 'bg-green-500 text-white',
+          disabled: true
+        };
+      case 'pending':
+        return {
+          text: 'Запрос отправлен',
+          className: 'bg-gray-500 text-white',
+          disabled: true
+        };
+      default:
+        return {
+          text: 'Добавить в друзья',
+          className: 'bg-blue-500 text-white hover:bg-blue-600',
+          onClick: sendFriendRequest
+        };
+    }
+  };
+
+  const buttonConfig = getButtonConfig();
+
+  return (
+    <button
+      onClick={buttonConfig.onClick}
+      disabled={isLoading || buttonConfig.disabled}
+      className={`px-4 py-2 rounded-lg font-medium transition duration-200 ${
+        buttonConfig.className
+      } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+      {isLoading ? 'Отправка...' : buttonConfig.text}
+    </button>
+  );
+}
+
+
+
+================================================================================
 ФАЙЛ: components/GuestRoute.js
 ПОЛНЫЙ ПУТЬ: src/components/GuestRoute.js
 РАЗМЕР: 1251 символов
@@ -251,7 +362,7 @@ export default function GuestRoute({ children }) {
 ================================================================================
 ФАЙЛ: components/Header.js
 ПОЛНЫЙ ПУТЬ: src/components/Header.js
-РАЗМЕР: 11750 символов
+РАЗМЕР: 11780 символов
 ================================================================================
 
 // src/components/Header.js
@@ -364,8 +475,8 @@ export default function Header() {
               <Link href="/about" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
                 О нас
               </Link>
-              <Link href="/community" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
-                Сообщество
+              <Link href="/users" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                Пользователи
               </Link>
             </nav>
 
@@ -395,7 +506,7 @@ export default function Header() {
                     Мои отпуски
                   </Link>
                   <Link 
-                    href="/profile" 
+                    href={`/profile/`} 
                     className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-2 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     {user?.name || 'Профиль'}
@@ -459,11 +570,11 @@ export default function Header() {
                   О нас
                 </Link>
                 <Link 
-                  href="/community" 
+                  href="/users" 
                   className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
                   onClick={handleLinkClick}
                 >
-                  Сообщество
+                  Пользователи
                 </Link>
                 
                 <div className="pt-4 border-t border-gray-200 space-y-3">
@@ -492,7 +603,7 @@ export default function Header() {
                         Мои отпуски
                       </Link>
                       <Link 
-                        href="/profile" 
+                        href={`/profile/${user?.usertag || user?.id}`} 
                         className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
                         onClick={handleLinkClick}
                       >
@@ -1006,7 +1117,7 @@ export default function Notification({ message, type = 'error', onClose }) {
 ================================================================================
 ФАЙЛ: components/NotificationCenter.js
 ПОЛНЫЙ ПУТЬ: src/components/NotificationCenter.js
-РАЗМЕР: 10583 символов
+РАЗМЕР: 9818 символов
 ================================================================================
 
 // src/components/NotificationCenter.js
@@ -1020,7 +1131,6 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef(null);
-  const observerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -1032,48 +1142,8 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
 
     return () => {
       document.body.style.overflow = 'unset';
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
     };
   }, [isOpen]);
-
-  // Настройка Intersection Observer для автоматического отметки прочитанными
-  useEffect(() => {
-    if (!isOpen || notifications.length === 0) return;
-
-    const unreadNotifications = notifications.filter(n => !n.isRead);
-    if (unreadNotifications.length === 0) return;
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const notificationId = entry.target.dataset.notificationId;
-            markAsRead(notificationId);
-          }
-        });
-      },
-      {
-        root: containerRef.current,
-        threshold: 0.5,
-        rootMargin: '0px 0px -50px 0px'
-      }
-    );
-
-    unreadNotifications.forEach(notification => {
-      const element = document.querySelector(`[data-notification-id="${notification.id}"]`);
-      if (element) {
-        observerRef.current.observe(element);
-      }
-    });
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [isOpen, notifications]);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
@@ -1151,12 +1221,36 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
           className="md:hidden w-full h-full bg-white flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <Header 
-            unreadCount={unreadCount} 
-            onMarkAllAsRead={handleMarkAllAsRead} 
-            onClose={handleClose}
-            isMobile={true}
-          />
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={handleClose} 
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Уведомления</h2>
+                {unreadCount > 0 && (
+                  <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  Прочитать все
+                </button>
+              )}
+            </div>
+          </div>
+
           <NotificationContent 
             ref={containerRef}
             isLoading={isLoading}
@@ -1173,14 +1267,42 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col h-full">
-            <Header 
-              unreadCount={unreadCount} 
-              onMarkAllAsRead={handleMarkAllAsRead} 
-              onClose={handleClose}
-              isMobile={false}
-            />
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Уведомления</h2>
+                  {unreadCount > 0 && (
+                    <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    Прочитать все
+                  </button>
+                )}
+                <button 
+                  onClick={handleClose} 
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             
-            <div className="flex-1 min-h-0"> {/* Важно: min-h-0 для правильного скролла */}
+            <div className="flex-1 min-h-0">
               <NotificationContent 
                 ref={containerRef}
                 isLoading={isLoading}
@@ -1191,85 +1313,23 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
               />
             </div>
 
-            <Footer onClose={handleClose} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
-  return (
-    <div className={`flex items-center justify-between ${
-      isMobile ? 'p-4 border-b border-gray-200' : 'p-4 border-b border-gray-200'
-    }`}>
-      <div className="flex items-center space-x-3">
-        {isMobile && (
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        )}
-        <div className="flex items-center space-x-3">
-          {!isMobile && (
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
-              </svg>
+            <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Link
+                href="/notifications"
+                className="block w-full text-center bg-white text-gray-700 py-2 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300 transition-colors"
+                onClick={handleClose}
+              >
+                Все уведомления
+              </Link>
             </div>
-          )}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Уведомления</h2>
-            {unreadCount > 0 && (
-              <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
-            )}
           </div>
         </div>
       </div>
-      
-      <div className="flex items-center space-x-2">
-        {unreadCount > 0 && (
-          <button
-            onClick={onMarkAllAsRead}
-            className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            Прочитать все
-          </button>
-        )}
-        {!isMobile && (
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
     </div>
   );
 }
 
-function Footer({ onClose }) {
-  return (
-    <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-      <Link
-        href="/notifications"
-        className="block w-full text-center bg-white text-gray-700 py-2 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300 transition-colors"
-        onClick={onClose}
-      >
-        Все уведомления
-      </Link>
-    </div>
-  );
-}
-
+// Отдельный компонент для контента уведомлений
 const NotificationContent = React.forwardRef(({ 
   isLoading, 
   notifications, 
@@ -1318,7 +1378,7 @@ const NotificationContent = React.forwardRef(({
       className={`h-full overflow-y-auto notification-scroll ${
         isMobile ? 'p-4' : 'p-3'
       }`}
-      style={isMobile ? {} : { maxHeight: 'calc(85vh - 120px)' }} // 85vh минус высота header и footer
+      style={isMobile ? {} : { maxHeight: 'calc(85vh - 120px)' }}
     >
       <div className="space-y-3">
         {notifications.map((notification) => (
@@ -1339,9 +1399,9 @@ const NotificationContent = React.forwardRef(({
   );
 });
 
-NotificationContent.displayName = 'NotificationContent';
-
+// Добавляем React импорт в конец файла
 import React from 'react';
+NotificationContent.displayName = 'NotificationContent';
 
 
 
@@ -1723,7 +1783,7 @@ export default function ProtectedRoute({ children }) {
 ================================================================================
 ФАЙЛ: components/RegistrationForm.js
 ПОЛНЫЙ ПУТЬ: src/components/RegistrationForm.js
-РАЗМЕР: 8750 символов
+РАЗМЕР: 11095 символов
 ================================================================================
 
 // src/components/RegistrationForm.js
@@ -1732,12 +1792,12 @@ export default function ProtectedRoute({ children }) {
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Notification from './Notification';
 
 export default function RegistrationForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
+    usertag: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -1753,6 +1813,16 @@ export default function RegistrationForm() {
       newErrors.name = 'Имя обязательно';
     } else if (formData.name.length < 2) {
       newErrors.name = 'Имя должно содержать минимум 2 символа';
+    }
+
+    if (!formData.usertag.trim()) {
+      newErrors.usertag = 'Usertag обязателен';
+    } else if (formData.usertag.length < 3) {
+      newErrors.usertag = 'Usertag должен содержать минимум 3 символа';
+    } else if (!/^[a-z0-9-]+$/.test(formData.usertag)) {
+      newErrors.usertag = 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы';
+    } else if (formData.usertag.length > 20) {
+      newErrors.usertag = 'Usertag не должен превышать 20 символов';
     }
 
     if (!formData.email.trim()) {
@@ -1779,9 +1849,16 @@ export default function RegistrationForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Для usertag преобразуем в нижний регистр и убираем пробелы
+    let processedValue = value;
+    if (name === 'usertag') {
+      processedValue = value.toLowerCase().replace(/\s+/g, '');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
     
     if (errors[name]) {
@@ -1789,6 +1866,35 @@ export default function RegistrationForm() {
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  const generateUsertag = (name) => {
+    if (!name.trim()) return '';
+    
+    const baseTag = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 15);
+    
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    return `${baseTag}${randomSuffix}`;
+  };
+
+  const handleGenerateUsertag = () => {
+    if (formData.name.trim()) {
+      const generatedUsertag = generateUsertag(formData.name);
+      setFormData(prev => ({
+        ...prev,
+        usertag: generatedUsertag
+      }));
+      
+      if (errors.usertag) {
+        setErrors(prev => ({
+          ...prev,
+          usertag: ''
+        }));
+      }
     }
   };
 
@@ -1809,6 +1915,7 @@ export default function RegistrationForm() {
         },
         body: JSON.stringify({
           name: formData.name,
+          usertag: formData.usertag,
           email: formData.email,
           password: formData.password,
         }),
@@ -1818,14 +1925,8 @@ export default function RegistrationForm() {
       const data = await response.json();
 
       if (response.ok) {
-        setNotification({ 
-          message: 'Регистрация прошла успешно! Перенаправляем...', 
-          type: 'success' 
-        });
-        
-        setTimeout(() => {
-          router.push('/my-vacations');
-        }, 1000);
+        // Редирект на профиль с использованием usertag
+        router.push(`/profile/${data.user.usertag}`);
       } else {
         setNotification({ 
           message: data.message || 'Ошибка при регистрации', 
@@ -1843,145 +1944,179 @@ export default function RegistrationForm() {
   };
 
   return (
-    <>
-      <Notification 
-        message={notification.message} 
-        type={notification.type}
-        onClose={() => setNotification({ message: '', type: '' })}
-      />
-
-      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Создать аккаунт
-          </h2>
-          <p className="text-gray-600">
-            Начните планировать свои путешествия
-          </p>
+    <div className="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-gray-900 mb-2">
+          Создать аккаунт
+        </h2>
+        <p className="text-gray-600">
+          Начните планировать свои путешествия
+        </p>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Поле имени */}
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            Имя *
+          </label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+              errors.name ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Введите ваше имя"
+            required
+          />
+          {errors.name && (
+            <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+          )}
         </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Поле имени */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-              Имя
+
+        {/* Поле usertag */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="usertag" className="block text-sm font-medium text-gray-700">
+              Usertag *
             </label>
+            <button
+              type="button"
+              onClick={handleGenerateUsertag}
+              disabled={!formData.name.trim()}
+              className="text-sm text-emerald-600 hover:text-emerald-500 font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
+            >
+              Сгенерировать
+            </button>
+          </div>
+          <div className="flex items-center">
+            <span className="text-gray-500 mr-2">@</span>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="usertag"
+              name="usertag"
+              value={formData.usertag}
               onChange={handleChange}
-              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
+              className={`flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                errors.usertag ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Введите ваше имя"
+              placeholder="ваш-usertag"
+              required
             />
-            {errors.name && (
-              <p className="mt-2 text-sm text-red-600">{errors.name}</p>
-            )}
           </div>
-
-          {/* Поле email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
-                errors.email ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="your@email.com"
-            />
-            {errors.email && (
-              <p className="mt-2 text-sm text-red-600">{errors.email}</p>
-            )}
-          </div>
-
-          {/* Поле пароля */}
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-              Пароль
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
-                errors.password ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Минимум 6 символов"
-            />
-            {errors.password && (
-              <p className="mt-2 text-sm text-red-600">{errors.password}</p>
-            )}
-          </div>
-
-          {/* Подтверждение пароля */}
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-              Подтвердите пароль
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`text-gray-900 w-full px-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
-                errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Повторите пароль"
-            />
-            {errors.confirmPassword && (
-              <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
-            )}
-          </div>
-
-          {/* Кнопка отправки */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-emerald-700 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin mr-2"></div>
-                Регистрация...
-              </div>
-            ) : (
-              'Создать аккаунт бесплатно'
-            )}
-          </button>
-
-          {/* Бесплатно навсегда */}
-          <div className="text-center">
-            <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm">
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-              <span>Полностью бесплатно • Без ограничений</span>
-            </div>
-          </div>
-        </form>
-
-        <div className="mt-8 text-center">
-          <p className="text-gray-600">
-            Уже есть аккаунт?{' '}
-            <Link href="/login" className="text-emerald-600 hover:text-emerald-500 font-semibold transition duration-200">
-              Войдите
-            </Link>
+          {errors.usertag && (
+            <p className="mt-2 text-sm text-red-600">{errors.usertag}</p>
+          )}
+          <p className="mt-1 text-sm text-gray-500">
+            Только латинские буквы в нижнем регистре, цифры и дефисы (3-20 символов)
           </p>
         </div>
+
+        {/* Поле email */}
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            Email *
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+              errors.email ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="your@email.com"
+            required
+          />
+          {errors.email && (
+            <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+          )}
+        </div>
+
+        {/* Поле пароля */}
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            Пароль *
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+              errors.password ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Минимум 6 символов"
+            required
+          />
+          {errors.password && (
+            <p className="mt-2 text-sm text-red-600">{errors.password}</p>
+          )}
+        </div>
+
+        {/* Подтверждение пароля */}
+        <div>
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+            Подтвердите пароль *
+          </label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+              errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Повторите пароль"
+            required
+          />
+          {errors.confirmPassword && (
+            <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
+          )}
+        </div>
+
+        {/* Кнопка отправки */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 text-white py-4 px-6 rounded-lg text-lg font-semibold hover:from-emerald-700 hover:to-teal-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin mr-2"></div>
+              Регистрация...
+            </div>
+          ) : (
+            'Создать аккаунт бесплатно'
+          )}
+        </button>
+
+        {/* Бесплатно навсегда */}
+        <div className="text-center">
+          <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <span>Полностью бесплатно • Без ограничений</span>
+          </div>
+        </div>
+      </form>
+
+      <div className="mt-8 text-center">
+        <p className="text-gray-600">
+          Уже есть аккаунт?{' '}
+          <Link href="/login" className="text-emerald-600 hover:text-emerald-500 font-semibold transition duration-200">
+            Войдите
+          </Link>
+        </p>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -2387,6 +2522,163 @@ export default function BaseNotification({ notification, onMarkAsRead, children 
 
 
 ================================================================================
+ФАЙЛ: components/notifications/FriendRequestNotification.js
+ПОЛНЫЙ ПУТЬ: src/components/notifications/FriendRequestNotification.js
+РАЗМЕР: 4906 символов
+================================================================================
+
+'use client';
+
+import { useState } from 'react';
+import BaseNotification from './BaseNotification';
+
+export default function FriendRequestNotification({ notification, onMarkAsRead, onUpdate }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState(notification.data?.status || 'pending');
+
+  const handleAccept = async () => {
+    if (!notification.data?.requestId) {
+      console.error('❌ Нет requestId в данных уведомления');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      console.log('📤 Отправляем запрос на принятие дружбы:', notification.data.requestId);
+
+      const response = await fetch('/api/friends/respond', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          requestId: notification.data.requestId, 
+          accept: true 
+        }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      console.log('📥 Ответ от сервера:', data);
+
+      if (response.ok) {
+        setStatus('accepted');
+        // Помечаем уведомление как прочитанное
+        await onMarkAsRead(notification.id);
+        // Обновляем список уведомлений
+        if (onUpdate) onUpdate();
+        
+        // Показываем сообщение об успехе
+        console.log('✅ Запрос дружбы принят!');
+      } else {
+        console.error('❌ Ошибка принятия запроса:', data.message);
+        alert(data.message || 'Ошибка принятия запроса');
+      }
+    } catch (error) {
+      console.error('❌ Ошибка сети:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDecline = async () => {
+    if (!notification.data?.requestId) {
+      console.error('❌ Нет requestId в данных уведомления');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      console.log('📤 Отправляем запрос на отклонение дружбы:', notification.data.requestId);
+
+      const response = await fetch('/api/friends/respond', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          requestId: notification.data.requestId, 
+          accept: false 
+        }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+      console.log('📥 Ответ от сервера:', data);
+
+      if (response.ok) {
+        setStatus('rejected');
+        // Помечаем уведомление как прочитанное
+        await onMarkAsRead(notification.id);
+        // Обновляем список уведомлений
+        if (onUpdate) onUpdate();
+        
+        console.log('❌ Запрос дружбы отклонен');
+      } else {
+        console.error('❌ Ошибка отклонения запроса:', data.message);
+        alert(data.message || 'Ошибка отклонения запроса');
+      }
+    } catch (error) {
+      console.error('❌ Ошибка сети:', error);
+      alert('Ошибка сети');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Если статус уже обработан, показываем соответствующий текст
+  if (status === 'accepted') {
+    return (
+      <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+        <div className="flex items-center space-x-2 text-sm text-green-600 px-3 py-2 border border-green-300 rounded-md bg-green-50 mt-2">
+          <span>✅ Запрос принят</span>
+        </div>
+      </BaseNotification>
+    );
+  }
+
+  if (status === 'rejected') {
+    return (
+      <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+        <div className="flex items-center space-x-2 text-sm text-red-600 px-3 py-2 border border-red-300 rounded-md bg-red-50 mt-2">
+          <span>❌ Запрос отклонен</span>
+        </div>
+      </BaseNotification>
+    );
+  }
+
+  return (
+    <BaseNotification notification={notification} onMarkAsRead={onMarkAsRead}>
+      <div className="flex space-x-2 mt-2">
+        <button
+          onClick={handleAccept}
+          disabled={isLoading}
+          className="flex-1 bg-green-500 text-white px-3 py-2 rounded text-sm hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin mr-2"></div>
+          ) : null}
+          {isLoading ? 'Принятие...' : 'Принять'}
+        </button>
+        <button
+          onClick={handleDecline}
+          disabled={isLoading}
+          className="flex-1 bg-gray-300 text-gray-700 px-3 py-2 rounded text-sm hover:bg-gray-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        >
+          {isLoading ? (
+            <div className="w-4 h-4 border-t-2 border-gray-500 rounded-full animate-spin mr-2"></div>
+          ) : null}
+          {isLoading ? 'Отклонение...' : 'Отклонить'}
+        </button>
+      </div>
+    </BaseNotification>
+  );
+}
+
+
+
+================================================================================
 ФАЙЛ: components/notifications/InfoNotification.js
 ПОЛНЫЙ ПУТЬ: src/components/notifications/InfoNotification.js
 РАЗМЕР: 724 символов
@@ -2576,20 +2868,28 @@ export default function InvitationNotification({ notification, onMarkAsRead, onU
 ================================================================================
 ФАЙЛ: components/notifications/NotificationFactory.js
 ПОЛНЫЙ ПУТЬ: src/components/notifications/NotificationFactory.js
-РАЗМЕР: 711 символов
+РАЗМЕР: 928 символов
 ================================================================================
 
-// src/components/notifications/NotificationFactory.js
 'use client';
 
 import InfoNotification from './InfoNotification';
 import InvitationNotification from './InvitationNotification';
+import FriendRequestNotification from './FriendRequestNotification';
 
 export default function NotificationFactory({ notification, onMarkAsRead, onUpdate }) {
   switch (notification.type) {
     case 'invitation':
       return (
         <InvitationNotification
+          notification={notification}
+          onMarkAsRead={onMarkAsRead}
+          onUpdate={onUpdate}
+        />
+      );
+    case 'friend_request':
+      return (
+        <FriendRequestNotification
           notification={notification}
           onMarkAsRead={onMarkAsRead}
           onUpdate={onUpdate}
@@ -3028,44 +3328,114 @@ export default function ProfileAchievements({ profile }) {
 ================================================================================
 ФАЙЛ: components/profile/ProfileEditModal.js
 ПОЛНЫЙ ПУТЬ: src/components/profile/ProfileEditModal.js
-РАЗМЕР: 9592 символов
+РАЗМЕР: 18256 символов
 ================================================================================
 
 // src/components/profile/ProfileEditModal.js
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
+    usertag: '',
     bio: '',
     location: '',
     website: '',
-    profileVisibility: 'public'
+    profileVisibility: 'PUBLIC'
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [avatarPreview, setAvatarPreview] = useState(profile?.avatar || '');
+  const [bannerPreview, setBannerPreview] = useState(profile?.banner || '');
+  
+  const avatarInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
 
   useEffect(() => {
     if (profile) {
       setFormData({
         name: profile.name || '',
+        usertag: profile.usertag || '',
         bio: profile.bio || '',
         location: profile.location || '',
         website: profile.website || '',
-        profileVisibility: profile.profileVisibility || 'public'
+        profileVisibility: profile.profileVisibility || 'PUBLIC'
       });
+      setAvatarPreview(profile.avatar || '');
+      setBannerPreview(profile.banner || '');
     }
   }, [profile]);
 
+  const handleImageUpload = async (file, type) => {
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      formData.append('type', type);
+
+      const response = await fetch('/api/profile/upload', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Обновляем превью
+        if (type === 'avatar') {
+          setAvatarPreview(data.user.avatar);
+        } else {
+          setBannerPreview(data.user.banner);
+        }
+        
+        // Обновляем родительский компонент
+        onUpdate(data.user);
+      } else {
+        setErrors({ image: data.message || 'Ошибка загрузки изображения' });
+      }
+    } catch (error) {
+      setErrors({ image: 'Ошибка сети при загрузке изображения' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleImageUpload(file, 'avatar');
+    }
+  };
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleImageUpload(file, 'banner');
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Для usertag преобразуем в нижний регистр и убираем пробелы
+    let processedValue = value;
+    if (name === 'usertag') {
+      processedValue = value.toLowerCase().replace(/\s+/g, '');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
     
     if (errors[name]) {
@@ -3083,6 +3453,16 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
       newErrors.name = 'Имя обязательно';
     } else if (formData.name.length < 2) {
       newErrors.name = 'Имя должно содержать минимум 2 символа';
+    }
+
+    if (!formData.usertag.trim()) {
+      newErrors.usertag = 'Usertag обязателен';
+    } else if (formData.usertag.length < 3) {
+      newErrors.usertag = 'Usertag должен содержать минимум 3 символа';
+    } else if (!/^[a-z0-9-]+$/.test(formData.usertag)) {
+      newErrors.usertag = 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы';
+    } else if (formData.usertag.length > 20) {
+      newErrors.usertag = 'Usertag не должен превышать 20 символов';
     }
 
     if (formData.bio && formData.bio.length > 500) {
@@ -3127,8 +3507,22 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
 
       if (response.ok) {
         const updatedProfile = await response.json();
+        
+        // Проверяем, изменился ли usertag
+        const usertagChanged = profile.usertag !== updatedProfile.usertag;
+        
+        // Обновляем родительский компонент
         onUpdate(updatedProfile);
+        
+        // Закрываем модальное окно
         onClose();
+        
+        // Если usertag изменился, делаем редирект на новый URL
+        if (usertagChanged) {
+          setTimeout(() => {
+            router.push(`/profile/${updatedProfile.usertag}`);
+          }, 100);
+        }
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Ошибка обновления профиля' });
@@ -3144,7 +3538,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           {/* Заголовок */}
           <div className="flex items-center justify-between mb-6">
@@ -3158,6 +3552,93 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
               </svg>
             </button>
           </div>
+
+          {/* Загрузка изображений */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* Баннер */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Баннер профиля
+              </label>
+              <div 
+                className="relative h-32 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl cursor-pointer overflow-hidden group"
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                {bannerPreview ? (
+                  <img
+                    src={bannerPreview}
+                    alt="Баннер"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white">
+                    <svg className="w-8 h-8 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                  <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    {isUploading ? 'Загрузка...' : 'Изменить баннер'}
+                  </span>
+                </div>
+                
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerChange}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+              </div>
+            </div>
+
+            {/* Аватар */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Аватар
+              </label>
+              <div 
+                className="relative w-32 h-32 mx-auto bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full cursor-pointer overflow-hidden group"
+                onClick={() => avatarInputRef.current?.click()}
+              >
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Аватар"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
+                    {profile?.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
+                  <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-2">
+                    {isUploading ? 'Загрузка...' : 'Изменить аватар'}
+                  </span>
+                </div>
+                
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  disabled={isUploading}
+                />
+              </div>
+            </div>
+          </div>
+
+          {errors.image && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <p className="text-sm text-red-600">{errors.image}</p>
+            </div>
+          )}
 
           {/* Форма */}
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -3179,6 +3660,44 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
               />
               {errors.name && (
                 <p className="mt-2 text-sm text-red-600">{errors.name}</p>
+              )}
+            </div>
+
+            {/* Usertag */}
+            <div>
+              <label htmlFor="usertag" className="block text-sm font-medium text-gray-700 mb-2">
+                Usertag *
+              </label>
+              <div className="flex items-center">
+                <span className="text-gray-500 mr-2">@</span>
+                <input
+                  type="text"
+                  id="usertag"
+                  name="usertag"
+                  value={formData.usertag}
+                  onChange={handleChange}
+                  className={`flex-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                    errors.usertag ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="ваш-usertag"
+                />
+              </div>
+              {errors.usertag && (
+                <p className="mt-2 text-sm text-red-600">{errors.usertag}</p>
+              )}
+              <p className="mt-1 text-sm text-gray-500">
+                Только латинские буквы в нижнем регистре, цифры и дефисы (3-20 символов)
+              </p>
+              {profile?.usertag && formData.usertag !== profile.usertag && (
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">
+                    <strong>Внимание:</strong> После изменения usertag URL вашего профиля изменится на:
+                    <br />
+                    <code className="bg-blue-100 px-2 py-1 rounded text-blue-800">
+                      /profile/{formData.usertag}
+                    </code>
+                  </p>
+                </div>
               )}
             </div>
 
@@ -3260,14 +3779,14 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
               >
-                <option value="public">Публичный</option>
-                <option value="private">Приватный</option>
-                <option value="friends">Только друзья</option>
+                <option value="PUBLIC">Публичный</option>
+                <option value="FRIENDS_ONLY">Только друзья</option>
+                <option value="PRIVATE">Приватный</option>
               </select>
               <p className="mt-2 text-sm text-gray-500">
-                {formData.profileVisibility === 'public' && 'Ваш профиль видят все пользователи'}
-                {formData.profileVisibility === 'private' && 'Ваш профиль видят только вы'}
-                {formData.profileVisibility === 'friends' && 'Ваш профиль видят только друзья'}
+                {formData.profileVisibility === 'PUBLIC' && 'Ваш профиль и посты видны всем пользователям'}
+                {formData.profileVisibility === 'FRIENDS_ONLY' && 'Ваши посты видны только друзьям, профиль видят все'}
+                {formData.profileVisibility === 'PRIVATE' && 'Ваш профиль и посты видны только вам'}
               </p>
             </div>
 
@@ -3289,7 +3808,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
               </button>
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isUploading}
                 className="flex-1 bg-emerald-500 text-white py-3 px-6 rounded-xl font-medium hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
@@ -3314,7 +3833,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
 ================================================================================
 ФАЙЛ: components/profile/ProfileHeader.js
 ПОЛНЫЙ ПУТЬ: src/components/profile/ProfileHeader.js
-РАЗМЕР: 5402 символов
+РАЗМЕР: 7247 символов
 ================================================================================
 
 // src/components/profile/ProfileHeader.js
@@ -3322,101 +3841,121 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
 
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import FriendButton from '../FriendButton';
 
 export default function ProfileHeader({ profile, onEdit, onUpdate }) {
   const { user } = useAuth();
   const isOwnProfile = user?.id === profile.id;
 
-  // Простые надежные цвета баннера
-  const banners = [
-    'bg-blue-500',
-    'bg-green-500', 
-    'bg-orange-500',
-    'bg-purple-500',
-    'bg-teal-500',
-    'bg-pink-500'
-  ];
-
-  // Берем баннер из профиля или первый по умолчанию
-  const bannerIndex = profile.banner ? parseInt(profile.banner) || 0 : 0;
-  const currentBanner = banners[bannerIndex] || banners[0];
-
-  // Роль пользователя
-  const getUserRole = () => {
-    const vacationCount = profile.vacations?.length || 0;
-    
-    if (vacationCount >= 5) {
-      return { label: '🚀 Опытный путешественник', color: 'bg-purple-100 text-purple-800' };
-    }
-    if (vacationCount >= 2) {
-      return { label: '✈️ Путешественник', color: 'bg-blue-100 text-blue-800' };
-    }
-    return { label: '👋 Новый участник', color: 'bg-gray-100 text-gray-800' };
-  };
-
-  const userRole = getUserRole();
+  // Используем данные уровня из БД вместо расчета на клиенте
+  const userGroup = profile.userGroup || profile.group; // в зависимости от того как приходит из API
 
   return (
     <div className="bg-white border-b border-gray-200">
-      {/* Баннер в рамке */}
-      <div className="max-w-4xl mx-auto px-4 pt-6">
-        <div className={`h-40 rounded-xl border-4 border-white shadow-lg ${currentBanner}`}>
-          {/* Просто цветной фон в рамке */}
+      {/* Баннер */}
+      <div className="max-w-6xl mx-auto px-4 pt-6">
+        <div className="relative">
+          <div className="w-full aspect-[16/9] rounded-2xl border-4 border-white shadow-lg overflow-hidden">
+            {profile.banner ? (
+              <img
+                src={profile.banner}
+                alt="Баннер профиля"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white">
+                <div className="text-center">
+                  <svg className="w-16 h-16 mx-auto mb-3 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <p className="text-lg opacity-80 font-medium">Баннер профиля</p>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Аватар */}
+          <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+            <div className="w-24 h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 rounded-full border-4 border-white bg-white shadow-xl overflow-hidden">
+              {profile.avatar ? (
+                <img
+                  src={profile.avatar}
+                  alt={profile.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center text-white text-2xl md:text-3xl font-bold">
+                  {profile.name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Основной контент */}
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 mt-16 md:mt-20">
         
-        {/* Аватар и основная информация */}
-        <div className="flex flex-col items-center -mt-20">
+        {/* Имя и уровень */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3">
+            {profile.name}
+          </h1>
           
-          {/* Аватар */}
-          <div className="w-32 h-32 rounded-full border-4 border-white bg-white shadow-lg overflow-hidden mb-4">
-            {profile.avatar ? (
-              <img
-                src={profile.avatar}
-                alt={profile.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center text-white text-3xl font-bold">
-                {profile.name.charAt(0).toUpperCase()}
+          {/* Уровень из БД */}
+          {userGroup && (
+            <div className={`inline-flex items-center px-4 py-2 rounded-full text-base font-medium ${userGroup.color} ${userGroup.bgColor} mb-4`}>
+              <span className="mr-2">{userGroup.icon}</span>
+              <span>{userGroup.badgeText}</span>
+              {userGroup.isExclusive && (
+                <span className="ml-2 text-xs bg-white/20 px-2 py-1 rounded-full">Эксклюзив</span>
+              )}
+            </div>
+          )}
+
+          {/* Прогресс уровня */}
+          {profile.levelProgress && (
+            <div className="max-w-md mx-auto mb-4">
+              <div className="flex justify-between text-sm text-gray-600 mb-1">
+                <span>Уровень {profile.levelProgress.currentGroup?.level}</span>
+                <span>{profile.levelProgress.currentPoints} очков</span>
               </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-emerald-500 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${profile.levelProgress.progress}%` }}
+                ></div>
+              </div>
+              {profile.levelProgress.nextGroup && (
+                <div className="text-xs text-gray-500 mt-1">
+                  До {profile.levelProgress.nextGroup.badgeText}: {profile.levelProgress.pointsToNext} очков
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Кнопки */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            {isOwnProfile && (
+              <button
+                onClick={onEdit}
+                className="bg-emerald-500 text-white px-6 py-3 rounded-lg hover:bg-emerald-600 transition duration-200 font-medium shadow-lg"
+              >
+                Редактировать профиль
+              </button>
+            )}
+            {!isOwnProfile && (
+              <FriendButton targetUserId={profile.id} />
             )}
           </div>
-
-          {/* Имя и шильдик */}
-          <div className="text-center mb-4">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">
-              {profile.name}
-            </h1>
-            
-            {/* Шильдик роли */}
-            <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${userRole.color}`}>
-              <span>{userRole.label}</span>
-            </div>
-          </div>
-
-          {/* Кнопка редактирования */}
-          {isOwnProfile && (
-            <button
-              onClick={onEdit}
-              className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 font-medium shadow mb-6"
-            >
-              Редактировать профиль
-            </button>
-          )}
         </div>
 
         {/* Дополнительная информация */}
         <div className="border-t border-gray-200 pt-6 pb-8">
-          
-          {/* Контактная информация */}
-          <div className="flex flex-wrap gap-4 justify-center mb-4 text-sm text-gray-600">
+          <div className="flex flex-wrap gap-4 justify-center mb-4 text-sm md:text-base text-gray-600">
             {profile.location && (
-              <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 </svg>
                 <span>{profile.location}</span>
@@ -3424,23 +3963,23 @@ export default function ProfileHeader({ profile, onEdit, onUpdate }) {
             )}
             
             {profile.website && (
-              <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                 </svg>
                 <a 
                   href={profile.website} 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="text-emerald-600 hover:text-emerald-700"
+                  className="text-emerald-600 hover:text-emerald-700 font-medium"
                 >
                   Сайт
                 </a>
               </div>
             )}
             
-            <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-lg">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>С {new Date(profile.createdAt).toLocaleDateString('ru-RU')}</span>
@@ -3449,8 +3988,8 @@ export default function ProfileHeader({ profile, onEdit, onUpdate }) {
 
           {/* Био */}
           {profile.bio && (
-            <div className="bg-gray-50 rounded-lg p-4 text-center max-w-2xl mx-auto">
-              <p className="text-gray-700">{profile.bio}</p>
+            <div className="bg-gray-50 rounded-xl p-6 text-center max-w-3xl mx-auto">
+              <p className="text-gray-700 text-lg leading-relaxed">{profile.bio}</p>
             </div>
           )}
         </div>
@@ -3464,7 +4003,7 @@ export default function ProfileHeader({ profile, onEdit, onUpdate }) {
 ================================================================================
 ФАЙЛ: components/profile/ProfilePosts.js
 ПОЛНЫЙ ПУТЬ: src/components/profile/ProfilePosts.js
-РАЗМЕР: 11501 символов
+РАЗМЕР: 11668 символов
 ================================================================================
 
 // src/components/profile/ProfilePosts.js
@@ -3479,7 +4018,6 @@ export default function ProfilePosts({ profile, onUpdate }) {
   const [isLoading, setIsLoading] = useState(true);
   const [newPostContent, setNewPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPublic, setIsPublic] = useState(true);
 
   const isOwnProfile = user?.id === profile.id;
 
@@ -3519,8 +4057,7 @@ export default function ProfilePosts({ profile, onUpdate }) {
         },
         body: JSON.stringify({
           content: newPostContent,
-          isPublic,
-          userId: user.id // Добавляем userId
+          // УБРАН isPublic - теперь видимость определяется настройками профиля
         }),
         credentials: 'include'
       });
@@ -3529,11 +4066,10 @@ export default function ProfilePosts({ profile, onUpdate }) {
         const newPost = await response.json();
         setPosts(prev => [newPost, ...prev]);
         setNewPostContent('');
-        setIsPublic(true);
         onUpdate?.();
       } else {
         const errorData = await response.json();
-        console.error('Ошибка создания поста:', errorData.error);
+        console.error('Ошибка создания поста:', errorData.message);
       }
     } catch (error) {
       console.error('Ошибка создания поста:', error);
@@ -3546,32 +4082,28 @@ export default function ProfilePosts({ profile, onUpdate }) {
     try {
       const response = await fetch(`/api/profile/posts/${postId}/like`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id // Добавляем userId
-        }),
         credentials: 'include'
       });
 
       if (response.ok) {
+        const result = await response.json();
+        
         // Обновляем локальное состояние
         setPosts(prev => prev.map(post => {
           if (post.id === postId) {
-            const isLiked = post.likes.some(like => like.userId === user.id);
+            const isLiked = result.liked;
             return {
               ...post,
               likes: isLiked 
-                ? post.likes.filter(like => like.userId !== user.id)
-                : [...post.likes, { userId: user.id }]
+                ? [...post.likes, { userId: user.id }]
+                : post.likes.filter(like => like.userId !== user.id)
             };
           }
           return post;
         }));
       } else {
         const errorData = await response.json();
-        console.error('Ошибка лайка поста:', errorData.error);
+        console.error('Ошибка лайка поста:', errorData.message);
       }
     } catch (error) {
       console.error('Ошибка лайка поста:', error);
@@ -3616,15 +4148,12 @@ export default function ProfilePosts({ profile, onUpdate }) {
             />
             <div className="flex justify-between items-center mt-4">
               <div className="flex items-center space-x-4">
-                <label className="flex items-center space-x-2 text-sm text-gray-600">
-                  <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="rounded border-gray-300 text-emerald-500 focus:ring-emerald-500"
-                  />
-                  <span>Публичная запись</span>
-                </label>
+                {/* Информация о видимости вместо галочки isPublic */}
+                <div className="text-sm text-gray-500">
+                  {profile.profileVisibility === 'PUBLIC' && '📢 Публичный профиль - посты видны всем'}
+                  {profile.profileVisibility === 'FRIENDS_ONLY' && '👥 Только друзья - посты видны только друзьям'}
+                  {profile.profileVisibility === 'PRIVATE' && '🔒 Приватный профиль - посты видны только вам'}
+                </div>
                 <span className="text-sm text-gray-500">
                   {newPostContent.length}/500
                 </span>
@@ -3632,9 +4161,26 @@ export default function ProfilePosts({ profile, onUpdate }) {
               <button
                 type="submit"
                 disabled={!newPostContent.trim() || isSubmitting}
-                className="bg-emerald-500 text-white px-6 py-2 rounded-full hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="bg-emerald-500 text-white p-3 rounded-full hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center w-12 h-12"
+                title="Опубликовать"
               >
-                {isSubmitting ? 'Публикация...' : 'Опубликовать'}
+                {isSubmitting ? (
+                  <div className="w-5 h-5 border-t-2 border-white rounded-full animate-spin"></div>
+                ) : (
+                  <svg 
+                    className="w-5 h-5 transform rotate-45" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" 
+                    />
+                  </svg>
+                )}
               </button>
             </div>
           </form>
@@ -3652,7 +4198,9 @@ export default function ProfilePosts({ profile, onUpdate }) {
             <p className="text-gray-600">
               {isOwnProfile ? 
                 'Напишите первую запись, чтобы поделиться новостями' :
-                'Пользователь еще не опубликовал ни одной записи'
+                !profile.canViewPosts ? 
+                  'Нет доступа к постам этого пользователя' :
+                  'Пользователь еще не опубликовал ни одной записи'
               }
             </p>
           </div>
@@ -3671,7 +4219,7 @@ export default function ProfilePosts({ profile, onUpdate }) {
   );
 }
 
-// Компонент карточки поста
+// Компонент PostCard (должен быть внутри этого же файла)
 function PostCard({ post, onLike, currentUserId }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isLiked = post.likes.some(like => like.userId === currentUserId);
@@ -3719,14 +4267,6 @@ function PostCard({ post, onLike, currentUserId }) {
             <div className="font-semibold text-gray-900">{post.author.name}</div>
             <div className="flex items-center space-x-2 text-sm text-gray-500">
               <span>{formatDate(post.createdAt)}</span>
-              {!post.isPublic && (
-                <span className="flex items-center space-x-1">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                  </svg>
-                  <span>Только для меня</span>
-                </span>
-              )}
             </div>
           </div>
         </div>
@@ -3783,7 +4323,7 @@ function PostCard({ post, onLike, currentUserId }) {
 ================================================================================
 ФАЙЛ: components/profile/ProfileVacations.js
 ПОЛНЫЙ ПУТЬ: src/components/profile/ProfileVacations.js
-РАЗМЕР: 8415 символов
+РАЗМЕР: 6775 символов
 ================================================================================
 
 // src/components/profile/ProfileVacations.js
@@ -3792,8 +4332,8 @@ function PostCard({ post, onLike, currentUserId }) {
 import Link from 'next/link';
 import { useState } from 'react';
 
-export default function ProfileVacations({ profile }) {
-  const [viewMode, setViewMode] = useState('grid'); // grid или list
+export default function ProfileVacations({ profile, isOwnProfile }) {
+  const [viewMode, setViewMode] = useState('all'); // all, owned, participating
 
   if (!profile.vacations || profile.vacations.length === 0) {
     return (
@@ -3801,14 +4341,16 @@ export default function ProfileVacations({ profile }) {
         <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <span className="text-3xl">🏖️</span>
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Пока нет отпусков</h3>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          Пока нет отпусков
+        </h3>
         <p className="text-gray-600 mb-6">
-          {profile.id === profile.userId ? 
-            'Создайте свой первый отпуск, чтобы поделиться впечатлениями' :
-            'Пользователь еще не создал ни одного отпуска'
+          {isOwnProfile ? 
+            'Создайте свой первый отпуск или примите приглашение, чтобы поделиться впечатлениями' :
+            'Пользователь еще не участвует в отпусках'
           }
         </p>
-        {profile.id === profile.userId && (
+        {isOwnProfile && (
           <Link 
             href="/create-vacation" 
             className="bg-emerald-500 text-white px-6 py-3 rounded-full hover:bg-emerald-600 transition duration-200 font-semibold inline-flex items-center space-x-2"
@@ -3821,59 +4363,86 @@ export default function ProfileVacations({ profile }) {
     );
   }
 
+  // Фильтруем отпуски по роли
+  const ownedVacations = profile.vacations.filter(v => v.isOwner);
+  const participatingVacations = profile.vacations.filter(v => !v.isOwner);
+
+  const getFilteredVacations = () => {
+    switch (viewMode) {
+      case 'owned':
+        return ownedVacations;
+      case 'participating':
+        return participatingVacations;
+      default:
+        return profile.vacations;
+    }
+  };
+
+  const filteredVacations = getFilteredVacations();
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Отпуски</h2>
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-500">{profile.vacations.length} отпусков</span>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Отпуски</h2>
+          <p className="text-gray-600 mt-1">
+            Всего: {profile.vacations.length}
+            {ownedVacations.length > 0 && ` • Создано: ${ownedVacations.length}`}
+            {participatingVacations.length > 0 && ` • Участвует: ${participatingVacations.length}`}
+          </p>
+        </div>
+        
+        {/* Переключение режима просмотра (только если есть оба типа отпусков) */}
+        {ownedVacations.length > 0 && participatingVacations.length > 0 && (
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'grid' 
+              onClick={() => setViewMode('all')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'all' 
                   ? 'bg-white text-gray-900 shadow-sm' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
+              Все
             </button>
             <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-colors ${
-                viewMode === 'list' 
+              onClick={() => setViewMode('owned')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'owned' 
                   ? 'bg-white text-gray-900 shadow-sm' 
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
+              Созданные
+            </button>
+            <button
+              onClick={() => setViewMode('participating')}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'participating' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Участвует
             </button>
           </div>
-        </div>
+        )}
       </div>
 
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {profile.vacations.map((vacation) => (
-            <VacationCard key={vacation.id} vacation={vacation} />
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {profile.vacations.map((vacation) => (
-            <VacationListItem key={vacation.id} vacation={vacation} />
-          ))}
-        </div>
-      )}
+      {/* Сетка отпусков */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredVacations.map((vacation) => (
+          <VacationCard 
+            key={vacation.id} 
+            vacation={vacation} 
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
-// Карточка отпуска для grid view
+// Обновленная карточка отпуска
 function VacationCard({ vacation }) {
   const getStatus = (startDate, endDate) => {
     const now = new Date();
@@ -3898,9 +4467,21 @@ function VacationCard({ vacation }) {
           <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-2">
             {vacation.title}
           </h3>
-          <span className={`text-xs px-2 py-1 rounded-full ${status.color}`}>
-            {status.status === 'upcoming' ? 'Предстоит' : status.status === 'current' ? 'Сейчас' : 'Завершен'}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className={`text-xs px-2 py-1 rounded-full ${status.color}`}>
+              {status.status === 'upcoming' ? 'Предстоит' : status.status === 'current' ? 'Сейчас' : 'Завершен'}
+            </span>
+            {!vacation.isOwner && (
+              <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                Участник
+              </span>
+            )}
+            {vacation.isOwner && (
+              <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-800">
+                Создатель
+              </span>
+            )}
+          </div>
         </div>
 
         {vacation.destination && (
@@ -3925,60 +4506,216 @@ function VacationCard({ vacation }) {
   );
 }
 
-// Элемент списка для list view
-function VacationListItem({ vacation }) {
-  const getStatus = (startDate, endDate) => {
-    const now = new Date();
-    const start = new Date(startDate);
-    const end = new Date(endDate);
 
-    if (now < start) return { status: 'upcoming', color: 'bg-blue-100 text-blue-800' };
-    if (now <= end) return { status: 'current', color: 'bg-green-100 text-green-800' };
-    return { status: 'past', color: 'bg-gray-100 text-gray-800' };
-  };
 
-  const status = getStatus(vacation.startDate, vacation.endDate);
+================================================================================
+ФАЙЛ: components/users/UserCard.js
+ПОЛНЫЙ ПУТЬ: src/components/users/UserCard.js
+РАЗМЕР: 4997 символов
+================================================================================
+
+// src/components/users/UserCard.js
+'use client';
+
+import Link from 'next/link';
+import FriendButton from '../FriendButton';
+
+export default function UserCard({ user }) {
+  const vacationCount = user.vacationCount || 0;
+  const postCount = user.postCount || 0;
+  const friendCount = user.friendCount || 0;
 
   return (
-    <Link href={`/vacations/${vacation.id}`}>
-      <div className="border-2 border-gray-200 rounded-2xl p-4 hover:border-emerald-300 hover:shadow-lg transition-all duration-200 group cursor-pointer">
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-xl flex items-center justify-center text-white text-2xl flex-shrink-0">
-            🏖️
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-200 hover:border-emerald-200 group">
+      <div className="flex items-start space-x-4">
+        {/* Аватар */}
+        <div className="flex-shrink-0">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-lg border-2 border-white shadow-lg group-hover:scale-105 transition-transform duration-200">
+            {user.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              user.name.charAt(0).toUpperCase()
+            )}
           </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">
-                {vacation.title}
+        </div>
+
+        {/* Информация */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between mb-2">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors line-clamp-1">
+                {user.name}
               </h3>
-              <span className={`text-xs px-2 py-1 rounded-full ${status.color} flex-shrink-0 ml-2`}>
-                {status.status === 'upcoming' ? 'Предстоит' : status.status === 'current' ? 'Сейчас' : 'Завершен'}
+              <p className="text-gray-500 text-sm">@{user.usertag}</p>
+            </div>
+            
+            {/* Уровень из БД */}
+            {user.userGroup && (
+              <span className={`text-xs px-2 py-1 rounded-full ${user.userGroup.bgColor} ${user.userGroup.color} flex-shrink-0 ml-2`}>
+                {user.userGroup.icon} {user.userGroup.badgeText}
               </span>
+            )}
+          </div>
+
+          {/* Био */}
+          {user.bio && (
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+              {user.bio}
+            </p>
+          )}
+
+          {/* Статистика - компактная версия для мобильных */}
+          <div className="flex flex-wrap gap-3 text-sm text-gray-500 mb-3">
+            <div className="flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>{vacationCount}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>{postCount}</span>
             </div>
 
-            {vacation.destination && (
-              <p className="text-gray-600 text-sm mb-2 flex items-center space-x-1">
+            <div className="flex items-center space-x-1">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span>{friendCount}</span>
+            </div>
+
+            {user.location && (
+              <div className="flex items-center space-x-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 </svg>
-                <span>{vacation.destination}</span>
-              </p>
+                <span className="line-clamp-1 max-w-[100px]">{user.location}</span>
+              </div>
             )}
+          </div>
 
-            <div className="flex items-center space-x-4 text-sm text-gray-500">
-              <span>
-                {new Date(vacation.startDate).toLocaleDateString('ru-RU')} - {new Date(vacation.endDate).toLocaleDateString('ru-RU')}
-              </span>
-              <span>•</span>
-              <span>{vacation._count?.members || 0} участников</span>
-              <span>•</span>
-              <span>{vacation._count?.memories || 0} воспоминаний</span>
+          {/* Кнопки - адаптивная верстка */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div className="text-xs text-gray-400 order-2 sm:order-1">
+              С {new Date(user.createdAt).toLocaleDateString('ru-RU')}
+            </div>
+            <div className="flex gap-2 order-1 sm:order-2">
+              <FriendButton targetUserId={user.id} />
+              <Link 
+                href={`/profile/${user.usertag}`}
+                className="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition duration-200 text-sm font-medium whitespace-nowrap"
+              >
+                Профиль
+              </Link>
             </div>
           </div>
         </div>
       </div>
-    </Link>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: components/users/UserSearch.js
+ПОЛНЫЙ ПУТЬ: src/components/users/UserSearch.js
+РАЗМЕР: 3212 символов
+================================================================================
+
+// src/components/users/UserSearch.js
+'use client';
+
+import { useState } from 'react';
+
+export default function UserSearch({ onSearch, isLoading }) {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSearch = () => {
+    onSearch(searchTerm);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    onSearch('');
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="flex flex-col sm:flex-row gap-4">
+        {/* Поиск */}
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Поиск пользователей
+          </label>
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Поиск по имени или usertag..."
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
+                disabled={isLoading}
+              />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSearch}
+                disabled={isLoading}
+                className="bg-emerald-500 text-white px-6 py-3 rounded-xl hover:bg-emerald-600 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                Найти
+              </button>
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  disabled={isLoading}
+                  className="bg-gray-300 text-gray-700 px-4 py-3 rounded-xl hover:bg-gray-400 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Очистить поиск"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Информация о поиске */}
+      {searchTerm && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center">
+          <p className="text-sm text-blue-700">
+            Поиск: <span className="font-semibold">"{searchTerm}"</span>
+          </p>
+          <button
+            onClick={handleClearSearch}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+          >
+            Очистить
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -4966,7 +5703,7 @@ export default function VacationTimer({ vacation }) {
 ================================================================================
 ФАЙЛ: contexts/AuthContext.js
 ПОЛНЫЙ ПУТЬ: src/contexts/AuthContext.js
-РАЗМЕР: 5012 символов
+РАЗМЕР: 5030 символов
 ================================================================================
 
 // src/contexts/AuthContext.js
@@ -5059,14 +5796,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const register = async (name, email, password, rememberMe = false) => {
+  const register = async (name, usertag, email, password, rememberMe = false) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password, rememberMe }),
+        body: JSON.stringify({ name, usertag, email, password, rememberMe }),
         credentials: 'include'
       });
 
@@ -5517,5 +6254,126 @@ export const prisma =
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+
+
+
+================================================================================
+ФАЙЛ: lib/userLevels.js
+ПОЛНЫЙ ПУТЬ: src/lib/userLevels.js
+РАЗМЕР: 2708 символов
+================================================================================
+
+// lib/userLevels.js
+import { prisma } from './prisma';
+
+// Получить текущую группу пользователя по очкам
+export async function getUserGroup(userId) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { experiencePoints: true }
+  });
+
+  if (!user) return null;
+
+  const group = await prisma.group.findFirst({
+    where: {
+      minPoints: { lte: user.experiencePoints },
+      OR: [
+        { maxPoints: { gte: user.experiencePoints } },
+        { maxPoints: null }
+      ]
+    },
+    orderBy: { level: 'desc' }
+  });
+
+  return group;
+}
+
+// Добавить очки опыта пользователю
+export async function addExperiencePoints(userId, points) {
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      experiencePoints: { increment: points }
+    },
+    include: {
+      userGroups: {
+        include: {
+          group: true
+        }
+      }
+    }
+  });
+
+  // Проверяем, не перешел ли пользователь на новый уровень
+  const newGroup = await getUserGroup(userId);
+  const currentGroup = user.userGroups[0]?.group;
+
+  if (newGroup && (!currentGroup || currentGroup.id !== newGroup.id)) {
+    // Добавляем пользователя в новую группу
+    await prisma.userGroup.create({
+      data: {
+        userId: userId,
+        groupId: newGroup.id
+      }
+    });
+
+    // Создаем уведомление о новом уровне
+    await prisma.notification.create({
+      data: {
+        userId: userId,
+        type: 'level_up',
+        title: 'Новый уровень!',
+        message: `Поздравляем! Вы достигли уровня "${newGroup.name}"`,
+        data: {
+          groupId: newGroup.id,
+          groupName: newGroup.name,
+          level: newGroup.level
+        }
+      }
+    });
+  }
+
+  return user;
+}
+
+// Получить прогресс до следующего уровня
+export async function getLevelProgress(userId) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { experiencePoints: true }
+  });
+
+  if (!user) return null;
+
+  const currentGroup = await getUserGroup(userId);
+  const nextGroup = await prisma.group.findFirst({
+    where: {
+      level: { gt: currentGroup.level }
+    },
+    orderBy: { level: 'asc' }
+  });
+
+  if (!nextGroup) {
+    // Пользователь на максимальном уровне
+    return {
+      currentGroup,
+      progress: 100,
+      pointsToNext: 0,
+      nextGroup: null
+    };
+  }
+
+  const pointsInCurrentLevel = user.experiencePoints - currentGroup.minPoints;
+  const totalPointsInLevel = nextGroup.minPoints - currentGroup.minPoints;
+  const progress = Math.min(100, Math.round((pointsInCurrentLevel / totalPointsInLevel) * 100));
+
+  return {
+    currentGroup,
+    progress,
+    pointsToNext: nextGroup.minPoints - user.experiencePoints,
+    nextGroup
+  };
+}
 
 

@@ -3,15 +3,18 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }) {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
+    usertag: '',
     bio: '',
     location: '',
     website: '',
-    profileVisibility: 'public'
+    profileVisibility: 'PUBLIC'
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -26,10 +29,11 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
     if (profile) {
       setFormData({
         name: profile.name || '',
+        usertag: profile.usertag || '',
         bio: profile.bio || '',
         location: profile.location || '',
         website: profile.website || '',
-        profileVisibility: profile.profileVisibility || 'public'
+        profileVisibility: profile.profileVisibility || 'PUBLIC'
       });
       setAvatarPreview(profile.avatar || '');
       setBannerPreview(profile.banner || '');
@@ -89,9 +93,16 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // Для usertag преобразуем в нижний регистр и убираем пробелы
+    let processedValue = value;
+    if (name === 'usertag') {
+      processedValue = value.toLowerCase().replace(/\s+/g, '');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
     
     if (errors[name]) {
@@ -109,6 +120,16 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
       newErrors.name = 'Имя обязательно';
     } else if (formData.name.length < 2) {
       newErrors.name = 'Имя должно содержать минимум 2 символа';
+    }
+
+    if (!formData.usertag.trim()) {
+      newErrors.usertag = 'Usertag обязателен';
+    } else if (formData.usertag.length < 3) {
+      newErrors.usertag = 'Usertag должен содержать минимум 3 символа';
+    } else if (!/^[a-z0-9-]+$/.test(formData.usertag)) {
+      newErrors.usertag = 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы';
+    } else if (formData.usertag.length > 20) {
+      newErrors.usertag = 'Usertag не должен превышать 20 символов';
     }
 
     if (formData.bio && formData.bio.length > 500) {
@@ -153,8 +174,22 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
 
       if (response.ok) {
         const updatedProfile = await response.json();
+        
+        // Проверяем, изменился ли usertag
+        const usertagChanged = profile.usertag !== updatedProfile.usertag;
+        
+        // Обновляем родительский компонент
         onUpdate(updatedProfile);
+        
+        // Закрываем модальное окно
         onClose();
+        
+        // Если usertag изменился, делаем редирект на новый URL
+        if (usertagChanged) {
+          setTimeout(() => {
+            router.push(`/profile/${updatedProfile.usertag}`);
+          }, 100);
+        }
       } else {
         const errorData = await response.json();
         setErrors({ submit: errorData.message || 'Ошибка обновления профиля' });
@@ -295,6 +330,44 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
               )}
             </div>
 
+            {/* Usertag */}
+            <div>
+              <label htmlFor="usertag" className="block text-sm font-medium text-gray-700 mb-2">
+                Usertag *
+              </label>
+              <div className="flex items-center">
+                <span className="text-gray-500 mr-2">@</span>
+                <input
+                  type="text"
+                  id="usertag"
+                  name="usertag"
+                  value={formData.usertag}
+                  onChange={handleChange}
+                  className={`flex-1 px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                    errors.usertag ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="ваш-usertag"
+                />
+              </div>
+              {errors.usertag && (
+                <p className="mt-2 text-sm text-red-600">{errors.usertag}</p>
+              )}
+              <p className="mt-1 text-sm text-gray-500">
+                Только латинские буквы в нижнем регистре, цифры и дефисы (3-20 символов)
+              </p>
+              {profile?.usertag && formData.usertag !== profile.usertag && (
+                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">
+                    <strong>Внимание:</strong> После изменения usertag URL вашего профиля изменится на:
+                    <br />
+                    <code className="bg-blue-100 px-2 py-1 rounded text-blue-800">
+                      /profile/{formData.usertag}
+                    </code>
+                  </p>
+                </div>
+              )}
+            </div>
+
             {/* Биография */}
             <div>
               <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
@@ -373,14 +446,14 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
               >
-                <option value="public">Публичный</option>
-                <option value="private">Приватный</option>
-                <option value="friends">Только друзья</option>
+                <option value="PUBLIC">Публичный</option>
+                <option value="FRIENDS_ONLY">Только друзья</option>
+                <option value="PRIVATE">Приватный</option>
               </select>
               <p className="mt-2 text-sm text-gray-500">
-                {formData.profileVisibility === 'public' && 'Ваш профиль видят все пользователи'}
-                {formData.profileVisibility === 'private' && 'Ваш профиль видят только вы'}
-                {formData.profileVisibility === 'friends' && 'Ваш профиль видят только друзья'}
+                {formData.profileVisibility === 'PUBLIC' && 'Ваш профиль и посты видны всем пользователям'}
+                {formData.profileVisibility === 'FRIENDS_ONLY' && 'Ваши посты видны только друзьям, профиль видят все'}
+                {formData.profileVisibility === 'PRIVATE' && 'Ваш профиль и посты видны только вам'}
               </p>
             </div>
 

@@ -1,78 +1,51 @@
-// src/app/api/profile/posts/[id]/like/route.js
 import { NextResponse } from 'next/server';
+import { verifyAccessToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(request, { params }) {
   try {
-    const postId = params.id;
+    const { id: postId } = await params;
+    const accessToken = request.cookies.get('accessToken')?.value;
 
-    if (!postId) {
-      return NextResponse.json(
-        { error: 'Post ID is required' },
-        { status: 400 }
-      );
+    if (!accessToken) {
+      return NextResponse.json({ message: 'Не авторизован' }, { status: 401 });
     }
 
-    // Временное решение: получаем userId из тела запроса
-    const { userId } = await request.json();
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+    const decoded = verifyAccessToken(accessToken);
+    if (!decoded) {
+      return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
     }
 
     // Проверяем существование поста
     const post = await prisma.post.findUnique({
-      where: { id: postId }
-    });
-
-    if (!post) {
-      return NextResponse.json(
-        { error: 'Post not found' },
-        { status: 404 }
-      );
-    }
-
-    // Проверяем существование пользователя
-    const user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    if (!user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Проверяем, не лайкнул ли уже пользователь этот пост
-    const existingLike = await prisma.postLike.findUnique({
-      where: {
-        userId_postId: {
-          userId: userId,
-          postId: postId
+      where: { id: postId },
+      include: {
+        likes: {
+          where: { userId: decoded.userId }
         }
       }
     });
 
-    if (existingLike) {
-      // Убираем лайк
-      await prisma.postLike.delete({
+    if (!post) {
+      return NextResponse.json({ message: 'Запись не найдена' }, { status: 404 });
+    }
+
+    const isLiked = post.likes.length > 0;
+
+    if (isLiked) {
+      // Удаляем лайк
+      await prisma.postLike.deleteMany({
         where: {
-          userId_postId: {
-            userId: userId,
-            postId: postId
-          }
+          postId: postId,
+          userId: decoded.userId
         }
       });
     } else {
       // Добавляем лайк
       await prisma.postLike.create({
         data: {
-          userId: userId,
-          postId: postId
+          postId: postId,
+          userId: decoded.userId
         }
       });
     }
@@ -82,21 +55,26 @@ export async function POST(request, { params }) {
       where: { id: postId },
       include: {
         likes: {
+          select: { userId: true }
+        },
+        _count: {
           select: {
-            userId: true
+            likes: true,
+            comments: true
           }
         }
       }
     });
 
-    return NextResponse.json({ 
-      liked: !existingLike,
-      likesCount: updatedPost.likes.length 
+    return NextResponse.json({
+      liked: !isLiked,
+      likesCount: updatedPost._count.likes
     });
+
   } catch (error) {
-    console.error('Error toggling post like:', error);
+    console.error('Ошибка лайка записи:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
     );
   }

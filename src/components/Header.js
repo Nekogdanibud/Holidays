@@ -108,8 +108,8 @@ export default function Header() {
               <Link href="/about" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
                 О нас
               </Link>
-              <Link href="/community" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
-                Сообщество
+              <Link href="/users" className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium">
+                Пользователи
               </Link>
             </nav>
 
@@ -139,7 +139,7 @@ export default function Header() {
                     Мои отпуски
                   </Link>
                   <Link 
-                    href="/profile" 
+                    href={`/profile/`} 
                     className="bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-6 py-2 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     {user?.name || 'Профиль'}
@@ -203,11 +203,11 @@ export default function Header() {
                   О нас
                 </Link>
                 <Link 
-                  href="/community" 
+                  href="/users" 
                   className="text-gray-600 hover:text-emerald-600 transition duration-200 font-medium py-2"
                   onClick={handleLinkClick}
                 >
-                  Сообщество
+                  Пользователи
                 </Link>
                 
                 <div className="pt-4 border-t border-gray-200 space-y-3">
@@ -236,7 +236,7 @@ export default function Header() {
                         Мои отпуски
                       </Link>
                       <Link 
-                        href="/profile" 
+                        href={`/profile/${user?.usertag || user?.id}`} 
                         className="block bg-gradient-to-r from-emerald-600 to-teal-500 text-white text-center px-6 py-3 rounded-full hover:from-emerald-700 hover:to-teal-600 transition duration-200 shadow-lg"
                         onClick={handleLinkClick}
                       >

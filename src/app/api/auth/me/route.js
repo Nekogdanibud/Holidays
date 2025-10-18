@@ -29,13 +29,14 @@ export async function GET(request) {
       );
     }
 
-    // Получаем пользователя из базы
+    // Получаем пользователя из базы с usertag
     console.log('👤 Fetching user:', decoded.userId);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {
         id: true,
         name: true,
+        usertag: true, // ДОБАВЛЕНО
         email: true,
         avatar: true,
         createdAt: true
@@ -43,6 +44,7 @@ export async function GET(request) {
     });
 
     console.log('User found:', !!user);
+    console.log('User usertag:', user?.usertag);
 
     if (!user) {
       return NextResponse.json(

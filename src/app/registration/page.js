@@ -11,6 +11,7 @@ export default function RegistrationPage() {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
+    usertag: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -19,6 +20,36 @@ export default function RegistrationPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({ message: '', type: '' });
 
+  const generateUsertag = (name) => {
+    if (!name.trim()) return '';
+    
+    // Таблица транслитерации для русских имен
+    const translitMap = {
+      'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd',
+      'е': 'e', 'ё': 'yo', 'ж': 'zh', 'з': 'z', 'и': 'i',
+      'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
+      'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't',
+      'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts', 'ч': 'ch',
+      'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '',
+      'э': 'e', 'ю': 'yu', 'я': 'ya'
+    };
+    
+    let baseTag = name
+      .toLowerCase()
+      .split('')
+      .map(char => translitMap[char] || char)
+      .join('')
+      .replace(/[^a-z0-9]/g, '')
+      .slice(0, 12);
+    
+    if (!baseTag) {
+      baseTag = 'user';
+    }
+    
+    const randomSuffix = Math.random().toString(36).substring(2, 6);
+    return `${baseTag}${randomSuffix}`;
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
@@ -26,6 +57,16 @@ export default function RegistrationPage() {
       newErrors.name = 'Имя обязательно';
     } else if (formData.name.length < 2) {
       newErrors.name = 'Имя должно содержать минимум 2 символа';
+    }
+
+    if (!formData.usertag.trim()) {
+      newErrors.usertag = 'Usertag обязателен';
+    } else if (formData.usertag.length < 3) {
+      newErrors.usertag = 'Usertag должен содержать минимум 3 символа';
+    } else if (!/^[a-z0-9-]+$/.test(formData.usertag)) {
+      newErrors.usertag = 'Usertag может содержать только латинские буквы в нижнем регистре, цифры и дефисы';
+    } else if (formData.usertag.length > 20) {
+      newErrors.usertag = 'Usertag не должен превышать 20 символов';
     }
 
     if (!formData.email.trim()) {
@@ -52,9 +93,15 @@ export default function RegistrationPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    let processedValue = value;
+    if (name === 'usertag') {
+      processedValue = value.toLowerCase().replace(/\s+/g, '');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
     
     if (errors[name]) {
@@ -62,6 +109,33 @@ export default function RegistrationPage() {
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  const handleGenerateUsertag = () => {
+    console.log('Generate button clicked', formData.name);
+    
+    if (formData.name.trim()) {
+      const generatedUsertag = generateUsertag(formData.name);
+      console.log('Generated usertag:', generatedUsertag);
+      
+      setFormData(prev => ({
+        ...prev,
+        usertag: generatedUsertag
+      }));
+      
+      if (errors.usertag) {
+        setErrors(prev => ({
+          ...prev,
+          usertag: ''
+        }));
+      }
+    } else {
+      console.log('Name is empty');
+      setNotification({
+        message: 'Сначала введите имя',
+        type: 'warning'
+      });
     }
   };
 
@@ -82,6 +156,7 @@ export default function RegistrationPage() {
         },
         body: JSON.stringify({
           name: formData.name,
+          usertag: formData.usertag,
           email: formData.email,
           password: formData.password,
         }),
@@ -117,7 +192,7 @@ export default function RegistrationPage() {
 
   return (
     <GuestRoute>
-      <>
+      <div>
         <Notification 
           message={notification.message} 
           type={notification.type}
@@ -146,10 +221,9 @@ export default function RegistrationPage() {
             
             <div className="bg-white rounded-2xl shadow-xl p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Поле имени */}
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Имя
+                    Имя *
                   </label>
                   <input
                     type="text"
@@ -161,16 +235,50 @@ export default function RegistrationPage() {
                       errors.name ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Введите ваше имя"
+                    required
                   />
                   {errors.name && (
                     <p className="mt-2 text-sm text-red-600">{errors.name}</p>
                   )}
                 </div>
 
-                {/* Поле email */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label htmlFor="usertag" className="block text-sm font-medium text-gray-700">
+                      Usertag *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleGenerateUsertag}
+                      disabled={!formData.name.trim()}
+                      className="text-sm bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-3 py-1 rounded-md font-medium disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed transition duration-200"
+                    >
+                      Сгенерировать
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    id="usertag"
+                    name="usertag"
+                    value={formData.usertag}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
+                      errors.usertag ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="ваш-usertag"
+                    required
+                  />
+                  {errors.usertag && (
+                    <p className="mt-2 text-sm text-red-600">{errors.usertag}</p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500">
+                    Только латинские буквы в нижнем регистре, цифры и дефисы (3-20 символов)
+                  </p>
+                </div>
+
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                    Email
+                    Email *
                   </label>
                   <input
                     type="email"
@@ -182,16 +290,16 @@ export default function RegistrationPage() {
                       errors.email ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="your@email.com"
+                    required
                   />
                   {errors.email && (
                     <p className="mt-2 text-sm text-red-600">{errors.email}</p>
                   )}
                 </div>
 
-                {/* Поле пароля */}
                 <div>
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                    Пароль
+                    Пароль *
                   </label>
                   <input
                     type="password"
@@ -203,16 +311,16 @@ export default function RegistrationPage() {
                       errors.password ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Минимум 6 символов"
+                    required
                   />
                   {errors.password && (
                     <p className="mt-2 text-sm text-red-600">{errors.password}</p>
                   )}
                 </div>
 
-                {/* Подтверждение пароля */}
                 <div>
                   <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                    Подтвердите пароль
+                    Подтвердите пароль *
                   </label>
                   <input
                     type="password"
@@ -224,13 +332,13 @@ export default function RegistrationPage() {
                       errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                     }`}
                     placeholder="Повторите пароль"
+                    required
                   />
                   {errors.confirmPassword && (
                     <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
                   )}
                 </div>
 
-                {/* Кнопка отправки */}
                 <button
                   type="submit"
                   disabled={isLoading}
@@ -246,7 +354,6 @@ export default function RegistrationPage() {
                   )}
                 </button>
 
-                {/* Бесплатно навсегда */}
                 <div className="text-center">
                   <div className="inline-flex items-center space-x-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -268,7 +375,7 @@ export default function RegistrationPage() {
             </div>
           </div>
         </div>
-      </>
+      </div>
     </GuestRoute>
   );
 }

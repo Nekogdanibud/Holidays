@@ -9,7 +9,6 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
   const [notifications, setNotifications] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef(null);
-  const observerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,48 +20,8 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
 
     return () => {
       document.body.style.overflow = 'unset';
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
     };
   }, [isOpen]);
-
-  // Настройка Intersection Observer для автоматического отметки прочитанными
-  useEffect(() => {
-    if (!isOpen || notifications.length === 0) return;
-
-    const unreadNotifications = notifications.filter(n => !n.isRead);
-    if (unreadNotifications.length === 0) return;
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const notificationId = entry.target.dataset.notificationId;
-            markAsRead(notificationId);
-          }
-        });
-      },
-      {
-        root: containerRef.current,
-        threshold: 0.5,
-        rootMargin: '0px 0px -50px 0px'
-      }
-    );
-
-    unreadNotifications.forEach(notification => {
-      const element = document.querySelector(`[data-notification-id="${notification.id}"]`);
-      if (element) {
-        observerRef.current.observe(element);
-      }
-    });
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [isOpen, notifications]);
 
   const fetchNotifications = async () => {
     setIsLoading(true);
@@ -140,12 +99,36 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
           className="md:hidden w-full h-full bg-white flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
-          <Header 
-            unreadCount={unreadCount} 
-            onMarkAllAsRead={handleMarkAllAsRead} 
-            onClose={handleClose}
-            isMobile={true}
-          />
+          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={handleClose} 
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Уведомления</h2>
+                {unreadCount > 0 && (
+                  <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  Прочитать все
+                </button>
+              )}
+            </div>
+          </div>
+
           <NotificationContent 
             ref={containerRef}
             isLoading={isLoading}
@@ -162,14 +145,42 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col h-full">
-            <Header 
-              unreadCount={unreadCount} 
-              onMarkAllAsRead={handleMarkAllAsRead} 
-              onClose={handleClose}
-              isMobile={false}
-            />
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">Уведомления</h2>
+                  {unreadCount > 0 && (
+                    <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllAsRead}
+                    className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    Прочитать все
+                  </button>
+                )}
+                <button 
+                  onClick={handleClose} 
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             
-            <div className="flex-1 min-h-0"> {/* Важно: min-h-0 для правильного скролла */}
+            <div className="flex-1 min-h-0">
               <NotificationContent 
                 ref={containerRef}
                 isLoading={isLoading}
@@ -180,85 +191,23 @@ export default function NotificationCenter({ isOpen, onClose, onUpdate }) {
               />
             </div>
 
-            <Footer onClose={handleClose} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Header({ unreadCount, onMarkAllAsRead, onClose, isMobile }) {
-  return (
-    <div className={`flex items-center justify-between ${
-      isMobile ? 'p-4 border-b border-gray-200' : 'p-4 border-b border-gray-200'
-    }`}>
-      <div className="flex items-center space-x-3">
-        {isMobile && (
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        )}
-        <div className="flex items-center space-x-3">
-          {!isMobile && (
-            <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5zM10.24 8.56a5.97 5.97 0 01-3.79 2.93A2 2 0 004 13.46v.54a2 2 0 002 2h8a2 2 0 002-2v-.54a2 2 0 00-1.45-1.97 5.97 5.97 0 01-3.79-2.93 2 2 0 00-3.52 0z" />
-              </svg>
+            <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+              <Link
+                href="/notifications"
+                className="block w-full text-center bg-white text-gray-700 py-2 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300 transition-colors"
+                onClick={handleClose}
+              >
+                Все уведомления
+              </Link>
             </div>
-          )}
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Уведомления</h2>
-            {unreadCount > 0 && (
-              <p className="text-sm text-gray-600">{unreadCount} непрочитанных</p>
-            )}
           </div>
         </div>
       </div>
-      
-      <div className="flex items-center space-x-2">
-        {unreadCount > 0 && (
-          <button
-            onClick={onMarkAllAsRead}
-            className="text-sm text-blue-600 hover:text-blue-700 px-3 py-1 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            Прочитать все
-          </button>
-        )}
-        {!isMobile && (
-          <button 
-            onClick={onClose} 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        )}
-      </div>
     </div>
   );
 }
 
-function Footer({ onClose }) {
-  return (
-    <div className="p-3 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-      <Link
-        href="/notifications"
-        className="block w-full text-center bg-white text-gray-700 py-2 rounded-lg hover:bg-gray-100 text-sm font-medium border border-gray-300 transition-colors"
-        onClick={onClose}
-      >
-        Все уведомления
-      </Link>
-    </div>
-  );
-}
-
+// Отдельный компонент для контента уведомлений
 const NotificationContent = React.forwardRef(({ 
   isLoading, 
   notifications, 
@@ -307,7 +256,7 @@ const NotificationContent = React.forwardRef(({
       className={`h-full overflow-y-auto notification-scroll ${
         isMobile ? 'p-4' : 'p-3'
       }`}
-      style={isMobile ? {} : { maxHeight: 'calc(85vh - 120px)' }} // 85vh минус высота header и footer
+      style={isMobile ? {} : { maxHeight: 'calc(85vh - 120px)' }}
     >
       <div className="space-y-3">
         {notifications.map((notification) => (
@@ -328,6 +277,6 @@ const NotificationContent = React.forwardRef(({
   );
 });
 
-NotificationContent.displayName = 'NotificationContent';
-
+// Добавляем React импорт в конец файла
 import React from 'react';
+NotificationContent.displayName = 'NotificationContent';

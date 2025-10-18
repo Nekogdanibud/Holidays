@@ -12,7 +12,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      router.push(`/profile/${user.id}`);
+      router.push(`/profile/${user.usertag}`);
     }
   }, [user, router]);
 
