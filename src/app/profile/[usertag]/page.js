@@ -1,4 +1,3 @@
-// src/app/profile/[usertag]/page.js
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -49,7 +48,7 @@ function ProfileTabs({ activeTab, onTabChange, profile }) {
   );
 }
 
-// Компонент информации "О себе"
+// Комponent информации "О себе"
 function AboutTab({ profile }) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
@@ -157,7 +156,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('posts'); // По умолчанию вкладка "Записи"
+  const [activeTab, setActiveTab] = useState('posts');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -185,7 +184,31 @@ export default function ProfilePage() {
   }, [params.usertag]);
 
   const handleProfileUpdate = (updatedProfile) => {
-    setProfile(updatedProfile);
+    setProfile(prevProfile => ({
+      ...prevProfile,
+      ...updatedProfile,
+      // Сохраняем посты и отпуски из предыдущего состояния
+      posts: updatedProfile.posts || prevProfile.posts,
+      vacations: updatedProfile.vacations || prevProfile.vacations
+    }));
+  };
+
+  // Отдельная функция для обновления только постов
+  const handlePostsUpdate = () => {
+    // Просто перезагружаем посты без полного обновления профиля
+    fetch(`/api/profile/posts?userId=${profile.id}`, {
+      credentials: 'include'
+    })
+      .then(response => response.ok ? response.json() : null)
+      .then(posts => {
+        if (posts) {
+          setProfile(prev => ({
+            ...prev,
+            posts: posts
+          }));
+        }
+      })
+      .catch(error => console.error('Ошибка обновления постов:', error));
   };
 
   const renderTabContent = () => {
@@ -193,15 +216,25 @@ export default function ProfilePage() {
 
     switch (activeTab) {
       case 'posts':
-        return <ProfilePosts profile={profile} onUpdate={handleProfileUpdate} />;
+        return (
+          <ProfilePosts 
+            profile={profile} 
+            onUpdate={handlePostsUpdate} // Используем отдельную функцию для постов
+          />
+        );
       case 'vacations':
-        return <ProfileVacations profile={profile} />;
+        return <ProfileVacations profile={profile} isOwnProfile={profile.id === profile.id} />;
       case 'achievements':
         return <ProfileAchievements profile={profile} />;
       case 'about':
         return <AboutTab profile={profile} />;
       default:
-        return <ProfilePosts profile={profile} onUpdate={handleProfileUpdate} />;
+        return (
+          <ProfilePosts 
+            profile={profile} 
+            onUpdate={handlePostsUpdate} // Используем отдельную функцию для постов
+          />
+        );
     }
   };
 

@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
 
 export async function GET(request) {
   try {
@@ -83,6 +85,13 @@ export async function GET(request) {
             usertag: true
           }
         },
+        // ПРАВИЛЬНОЕ имя отношения согласно схеме
+        images: {
+          select: {
+            id: true,
+            url: true
+          }
+        },
         likes: {
           select: {
             userId: true
@@ -96,7 +105,9 @@ export async function GET(request) {
                 name: true,
                 avatar: true
               }
-            }
+            },
+            // ПРАВИЛЬНОЕ имя отношения для комментариев
+            images: true
           },
           orderBy: {
             createdAt: 'asc'
@@ -132,57 +143,134 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
     }
 
-    const { content } = await request.json();
+    const formData = await request.formData();
+    const content = formData.get('content');
+    const imageFiles = formData.getAll('images');
 
-    if (!content || content.trim().length === 0) {
+    // Валидация контента
+    if (!content || typeof content !== 'string' || content.trim().length === 0) {
       return NextResponse.json(
         { message: 'Содержание обязательно' },
         { status: 400 }
       );
     }
 
-    if (content.length > 500) {
+    const trimmedContent = content.trim();
+    if (trimmedContent.length > 500) {
       return NextResponse.json(
         { message: 'Содержание не должно превышать 500 символов' },
         { status: 400 }
       );
     }
 
-    // Создаем пост
-    const post = await prisma.post.create({
-      data: {
-        content: content.trim(),
-        authorId: decoded.userId
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            usertag: true
-          }
-        },
-        likes: {
-          select: {
-            userId: true
-          }
-        },
-        comments: {
-          include: {
-            author: {
-              select: {
-                id: true,
-                name: true,
-                avatar: true
+    // Валидация изображений
+    if (imageFiles && imageFiles.length > 0) {
+      for (const image of imageFiles) {
+        if (image.size === 0) continue;
+        
+        // Проверка типа файла
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(image.type)) {
+          return NextResponse.json(
+            { message: 'Разрешены только изображения в формате JPEG, PNG или WebP' },
+            { status: 400 }
+          );
+        }
+
+        // Проверка размера файла (5MB максимум)
+        const maxSize = 5 * 1024 * 1024;
+        if (image.size > maxSize) {
+          return NextResponse.json(
+            { message: 'Размер каждого изображения не должен превышать 5MB' },
+            { status: 400 }
+          );
+        }
+      }
+    }
+
+    // Создаем пост и изображения в транзакции
+    const result = await prisma.$transaction(async (tx) => {
+      // Создаем пост
+      const post = await tx.post.create({
+        data: {
+          content: trimmedContent,
+          authorId: decoded.userId
+        }
+      });
+
+      // Обрабатываем изображения - ИСПРАВЛЕНО: проверяем imageFiles
+      if (imageFiles && imageFiles.length > 0) {
+        for (const image of imageFiles) {
+          if (image.size === 0) continue;
+
+          // Создаем директорию для загрузок
+          const uploadDir = join(process.cwd(), 'public', 'uploads', 'posts');
+          await mkdir(uploadDir, { recursive: true });
+
+          // Генерируем уникальное имя файла
+          const timestamp = Date.now();
+          const randomString = Math.random().toString(36).substring(2, 15);
+          const fileExtension = image.name.split('.').pop();
+          const filename = `${timestamp}-${randomString}.${fileExtension}`;
+          const filepath = join(uploadDir, filename);
+
+          // Сохраняем файл
+          const bytes = await image.arrayBuffer();
+          const buffer = Buffer.from(bytes);
+          await writeFile(filepath, buffer);
+
+          // Создаем запись в базе
+          await tx.postImage.create({
+            data: {
+              url: `/uploads/posts/${filename}`,
+              postId: post.id
+            }
+          });
+        }
+      }
+
+      // Получаем полные данные поста
+      const postWithData = await tx.post.findUnique({
+        where: { id: post.id },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              avatar: true,
+              usertag: true
+            }
+          },
+          // ПРАВИЛЬНОЕ имя отношения
+          images: {
+            select: {
+              id: true,
+              url: true
+            }
+          },
+          likes: {
+            select: {
+              userId: true
+            }
+          },
+          comments: {
+            include: {
+              author: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatar: true
+                }
               }
             }
           }
         }
-      }
+      });
+
+      return postWithData;
     });
 
-    return NextResponse.json(post, { status: 201 });
+    return NextResponse.json(result, { status: 201 });
 
   } catch (error) {
     console.error('Ошибка создания поста:', error);

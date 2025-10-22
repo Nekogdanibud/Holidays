@@ -1,6 +1,6 @@
 // src/app/api/profile/upload/route.js
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, unlink } from 'fs/promises';
 import { join } from 'path';
 import { verifyAccessToken } from '../../../../lib/auth';
 import { prisma } from '../../../../lib/prisma';
@@ -29,7 +29,6 @@ export async function POST(request) {
       );
     }
 
-    // Проверяем тип файла
     if (!image.type.startsWith('image/')) {
       return NextResponse.json(
         { message: 'Файл должен быть изображением' },
@@ -37,7 +36,6 @@ export async function POST(request) {
       );
     }
 
-    // Проверяем размер файла (макс 5MB)
     if (image.size > 5 * 1024 * 1024) {
       return NextResponse.json(
         { message: 'Размер файла не должен превышать 5MB' },
@@ -45,53 +43,36 @@ export async function POST(request) {
       );
     }
 
-    // Создаем директории если их нет
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    const avatarsDir = join(uploadsDir, 'avatars');
-    const bannersDir = join(uploadsDir, 'banners');
-    
-    await mkdir(avatarsDir, { recursive: true });
-    await mkdir(bannersDir, { recursive: true });
+    // Создаем директорию для временных файлов
+    const tempDir = join(process.cwd(), 'public', 'uploads', 'temp');
+    await mkdir(tempDir, { recursive: true });
 
     // Генерируем уникальное имя файла
     const timestamp = Date.now();
     const fileExtension = image.name.split('.').pop();
-    const filename = `${timestamp}.${fileExtension}`;
-    
-    const uploadDir = type === 'avatar' ? avatarsDir : bannersDir;
-    const filepath = join(uploadDir, filename);
-    const publicUrl = `/uploads/${type === 'avatar' ? 'avatars' : 'banners'}/${filename}`;
+    const filename = `${decoded.userId}-${type}-${timestamp}.${fileExtension}`;
+    const filepath = join(tempDir, filename);
+    const tempPath = `/uploads/temp/${filename}`;
 
     // Сохраняем файл
     const bytes = await image.arrayBuffer();
     const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
 
-    // Обновляем профиль пользователя
-    const updateData = type === 'avatar' 
-      ? { avatar: publicUrl }
-      : { banner: publicUrl };
-
-    const updatedUser = await prisma.user.update({
-      where: { id: decoded.userId },
-      data: updateData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        avatar: true,
-        banner: true,
-        bio: true,
-        location: true,
-        website: true,
-        profileVisibility: true,
-        createdAt: true
+    // Планируем удаление файла через 5 минут
+    setTimeout(async () => {
+      try {
+        await unlink(filepath);
+        console.log(`Deleted temp file: ${filepath}`);
+      } catch (error) {
+        console.error(`Error deleting temp file ${filepath}:`, error);
       }
-    });
+    }, 5 * 60 * 1000); // 5 минут
 
+    // Возвращаем временный путь
     return NextResponse.json({
-      message: 'Изображение успешно загружено',
-      user: updatedUser
+      message: 'Изображение временно загружено',
+      tempPath
     });
 
   } catch (error) {

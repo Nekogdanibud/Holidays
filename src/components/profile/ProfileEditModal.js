@@ -5,6 +5,37 @@ import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
+// Компонент для превью изображений
+const ImagePreview = ({ src, alt, className, type }) => {
+  const [hasError, setHasError] = useState(false);
+
+  console.log(`ImagePreview for ${type}:`, { src, hasError });
+
+  if (!src || hasError) {
+    console.warn(`ImagePreview fallback to placeholder for ${type}:`, { src, hasError });
+    return (
+      <div className={`${className} flex items-center justify-center bg-gray-100 border-2 border-dashed border-gray-300`}>
+        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      onError={() => {
+        console.error(`Failed to load image for ${type}:`, src);
+        setHasError(true);
+      }}
+      style={{ objectFit: 'cover' }}
+    />
+  );
+};
+
 export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate }) {
   const { user } = useAuth();
   const router = useRouter();
@@ -18,15 +49,23 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadingType, setUploadingType] = useState(null);
   const [errors, setErrors] = useState({});
-  const [avatarPreview, setAvatarPreview] = useState(profile?.avatar || '');
-  const [bannerPreview, setBannerPreview] = useState(profile?.banner || '');
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [bannerPreview, setBannerPreview] = useState('');
+  const [tempAvatar, setTempAvatar] = useState(null); // Временный путь аватара
+  const [tempBanner, setTempBanner] = useState(null); // Временный путь баннера
   
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
+  const modalRef = useRef(null);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && isOpen) {
+      console.log('Profile data:', profile);
+      console.log('Profile avatar:', profile.avatar);
+      console.log('Profile banner:', profile.banner);
+
       setFormData({
         name: profile.name || '',
         usertag: profile.usertag || '',
@@ -35,15 +74,83 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
         website: profile.website || '',
         profileVisibility: profile.profileVisibility || 'PUBLIC'
       });
-      setAvatarPreview(profile.avatar || '');
-      setBannerPreview(profile.banner || '');
+      
+      const avatarUrl = profile.avatar ? getFullImageUrl(profile.avatar) : '';
+      const bannerUrl = profile.banner ? getFullImageUrl(profile.banner) : '';
+      console.log('Avatar preview URL:', avatarUrl);
+      console.log('Banner preview URL:', bannerUrl);
+      
+      setAvatarPreview(avatarUrl);
+      setBannerPreview(bannerUrl);
+      
+      setTempAvatar(null);
+      setTempBanner(null);
+      setErrors({});
     }
-  }, [profile]);
+  }, [profile, isOpen]);
+
+  // Очистка Blob URL и удаление временных изображений при размонтировании
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith('blob:')) {
+        console.log('Revoking avatar blob URL:', avatarPreview);
+        URL.revokeObjectURL(avatarPreview);
+      }
+      if (bannerPreview && bannerPreview.startsWith('blob:')) {
+        console.log('Revoking banner blob URL:', bannerPreview);
+        URL.revokeObjectURL(bannerPreview);
+      }
+      // Удаляем временные изображения с сервера
+      if (tempAvatar) deleteTempImage(tempAvatar);
+      if (tempBanner) deleteTempImage(tempBanner);
+    };
+  }, [avatarPreview, bannerPreview, tempAvatar, tempBanner]);
+
+  // Функция для получения полного URL изображения
+  const getFullImageUrl = (url) => {
+    console.log('getFullImageUrl input:', url);
+    if (!url) return '';
+    
+    if (url.startsWith('blob:') || url.startsWith('http')) return url;
+    if (url.startsWith('/') && typeof window !== 'undefined') {
+      const fullUrl = `${window.location.origin}${url}`;
+      console.log('Generated full URL:', fullUrl);
+      return fullUrl;
+    }
+    
+    console.warn('Unexpected URL format:', url);
+    return url;
+  };
+
+  // Функция для удаления временного изображения
+  const deleteTempImage = async (imagePath) => {
+    if (!imagePath) return;
+    try {
+      await fetch('/api/profile/delete-temp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imagePath }),
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Error deleting temp image:', error);
+    }
+  };
 
   const handleImageUpload = async (file, type) => {
     if (!file) return;
 
     setIsUploading(true);
+    setUploadingType(type);
+    setErrors({ ...errors, image: '' });
+
+    // Удаляем старое временное изображение
+    if (type === 'avatar' && tempAvatar) {
+      await deleteTempImage(tempAvatar);
+    } else if (type === 'banner' && tempBanner) {
+      await deleteTempImage(tempBanner);
+    }
+
     try {
       const formData = new FormData();
       formData.append('image', file);
@@ -56,30 +163,48 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
       });
 
       const data = await response.json();
+      console.log('API response:', data);
 
       if (response.ok) {
-        // Обновляем превью
-        if (type === 'avatar') {
-          setAvatarPreview(data.user.avatar);
-        } else {
-          setBannerPreview(data.user.banner);
-        }
+        const imageUrl = getFullImageUrl(data.tempPath);
+        console.log(`Uploaded ${type} temp URL:`, imageUrl);
         
-        // Обновляем родительский компонент
-        onUpdate(data.user);
+        if (type === 'avatar') {
+          setTempAvatar(data.tempPath);
+          setAvatarPreview(imageUrl);
+        } else {
+          setTempBanner(data.tempPath);
+          setBannerPreview(imageUrl);
+        }
       } else {
         setErrors({ image: data.message || 'Ошибка загрузки изображения' });
       }
     } catch (error) {
+      console.error('Upload error:', error);
       setErrors({ image: 'Ошибка сети при загрузке изображения' });
     } finally {
       setIsUploading(false);
+      setUploadingType(null);
     }
   };
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        setErrors({ image: 'Файл должен быть изображением' });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ image: 'Размер файла не должен превышать 5MB' });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      console.log('Avatar preview blob URL:', objectUrl);
+      setAvatarPreview(objectUrl);
+
       handleImageUpload(file, 'avatar');
     }
   };
@@ -87,6 +212,20 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
   const handleBannerChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        setErrors({ image: 'Файл должен быть изображением' });
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors({ image: 'Размер файла не должен превышать 5MB' });
+        return;
+      }
+
+      const objectUrl = URL.createObjectURL(file);
+      console.log('Banner preview blob URL:', objectUrl);
+      setBannerPreview(objectUrl);
+
       handleImageUpload(file, 'banner');
     }
   };
@@ -94,7 +233,6 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
   const handleChange = (e) => {
     const { name, value } = e.target;
     
-    // Для usertag преобразуем в нижний регистр и убираем пробелы
     let processedValue = value;
     if (name === 'usertag') {
       processedValue = value.toLowerCase().replace(/\s+/g, '');
@@ -163,28 +301,38 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
     setIsLoading(true);
 
     try {
+      // Подтверждаем временные изображения
+      const confirmData = {};
+      if (tempAvatar) confirmData.avatar = tempAvatar;
+      if (tempBanner) confirmData.banner = tempBanner;
+
+      // Обновляем профиль
       const response = await fetch('/api/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, ...confirmData }),
         credentials: 'include'
       });
 
       if (response.ok) {
         const updatedProfile = await response.json();
         
-        // Проверяем, изменился ли usertag
+        const finalProfile = {
+          ...updatedProfile,
+          posts: profile.posts,
+          vacations: profile.vacations,
+          friendCount: profile.friendCount,
+          vacationCount: profile.vacationCount,
+          postCount: profile.postCount
+        };
+
         const usertagChanged = profile.usertag !== updatedProfile.usertag;
         
-        // Обновляем родительский компонент
-        onUpdate(updatedProfile);
-        
-        // Закрываем модальное окно
+        onUpdate?.(finalProfile);
         onClose();
         
-        // Если usertag изменился, делаем редирект на новый URL
         if (usertagChanged) {
           setTimeout(() => {
             router.push(`/profile/${updatedProfile.usertag}`);
@@ -195,24 +343,67 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
         setErrors({ submit: errorData.message || 'Ошибка обновления профиля' });
       }
     } catch (error) {
+      console.error('Submit error:', error);
       setErrors({ submit: 'Ошибка сети' });
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleClose = () => {
+    setErrors({});
+    setIsLoading(false);
+    setIsUploading(false);
+    setUploadingType(null);
+    
+    // Восстанавливаем оригинальные превью
+    if (profile) {
+      const avatarUrl = profile.avatar ? getFullImageUrl(profile.avatar) : '';
+      const bannerUrl = profile.banner ? getFullImageUrl(profile.banner) : '';
+      console.log('Restoring avatar preview:', avatarUrl);
+      console.log('Restoring banner preview:', bannerUrl);
+      setAvatarPreview(avatarUrl);
+      setBannerPreview(bannerUrl);
+    }
+    
+    // Удаляем временные изображения
+    if (tempAvatar) deleteTempImage(tempAvatar);
+    if (tempBanner) deleteTempImage(tempBanner);
+    
+    setTempAvatar(null);
+    setTempBanner(null);
+    
+    onClose();
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div 
+        ref={modalRef}
+        className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
-          {/* Заголовок */}
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Редактировать профиль</h2>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              disabled={isUploading}
             >
               <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -220,34 +411,42 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
             </button>
           </div>
 
-          {/* Загрузка изображений */}
+          {(tempAvatar || tempBanner) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="flex items-center space-x-2 text-blue-700">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium">
+                  Новые изображения будут применены после сохранения
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {/* Баннер */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Баннер профиля
+                {tempBanner && <span className="ml-2 text-xs text-green-600">(новый)</span>}
               </label>
               <div 
-                className="relative h-32 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl cursor-pointer overflow-hidden group"
-                onClick={() => bannerInputRef.current?.click()}
+                className={`relative rounded-xl cursor-pointer overflow-hidden ${
+                  isUploading && uploadingType === 'banner' ? 'opacity-50' : ''
+                }`}
+                style={{ height: '120px' }}
+                onClick={() => !isUploading && bannerInputRef.current?.click()}
               >
-                {bannerPreview ? (
-                  <img
-                    src={bannerPreview}
-                    alt="Баннер"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white">
-                    <svg className="w-8 h-8 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                )}
+                <ImagePreview
+                  src={bannerPreview}
+                  alt="Баннер профиля"
+                  className="w-full h-full"
+                  type="banner"
+                />
                 
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                  <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    {isUploading ? 'Загрузка...' : 'Изменить баннер'}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white text-sm">
+                    {isUploading && uploadingType === 'banner' ? 'Загрузка...' : 'Изменить баннер'}
                   </span>
                 </div>
                 
@@ -262,30 +461,27 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
               </div>
             </div>
 
-            {/* Аватар */}
             <div className="space-y-3">
               <label className="block text-sm font-medium text-gray-700">
                 Аватар
+                {tempAvatar && <span className="ml-2 text-xs text-green-600">(новый)</span>}
               </label>
               <div 
-                className="relative w-32 h-32 mx-auto bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full cursor-pointer overflow-hidden group"
-                onClick={() => avatarInputRef.current?.click()}
+                className={`relative w-32 h-32 mx-auto rounded-full cursor-pointer overflow-hidden ${
+                  isUploading && uploadingType === 'avatar' ? 'opacity-50' : ''
+                }`}
+                onClick={() => !isUploading && avatarInputRef.current?.click()}
               >
-                {avatarPreview ? (
-                  <img
-                    src={avatarPreview}
-                    alt="Аватар"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
-                    {profile?.name?.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                <ImagePreview
+                  src={avatarPreview}
+                  alt="Аватар"
+                  className="w-full h-full"
+                  type="avatar"
+                />
                 
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-200 flex items-center justify-center">
-                  <span className="text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-center px-2">
-                    {isUploading ? 'Загрузка...' : 'Изменить аватар'}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-white text-xs text-center px-2">
+                    {isUploading && uploadingType === 'avatar' ? 'Загрузка...' : 'Изменить аватар'}
                   </span>
                 </div>
                 
@@ -307,9 +503,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
             </div>
           )}
 
-          {/* Форма */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Имя */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Имя *
@@ -324,19 +518,19 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Ваше имя"
+                disabled={isUploading}
               />
               {errors.name && (
                 <p className="mt-2 text-sm text-red-600">{errors.name}</p>
               )}
             </div>
 
-            {/* Usertag */}
             <div>
               <label htmlFor="usertag" className="block text-sm font-medium text-gray-700 mb-2">
                 Usertag *
               </label>
               <div className="flex items-center">
-                <span className="text-gray-500 mr-2">@</span>
+                <span className="text-gray-500 mr-2 text-lg">@</span>
                 <input
                   type="text"
                   id="usertag"
@@ -347,6 +541,7 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                     errors.usertag ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="ваш-usertag"
+                  disabled={isUploading}
                 />
               </div>
               {errors.usertag && (
@@ -355,20 +550,8 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
               <p className="mt-1 text-sm text-gray-500">
                 Только латинские буквы в нижнем регистре, цифры и дефисы (3-20 символов)
               </p>
-              {profile?.usertag && formData.usertag !== profile.usertag && (
-                <div className="mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-700">
-                    <strong>Внимание:</strong> После изменения usertag URL вашего профиля изменится на:
-                    <br />
-                    <code className="bg-blue-100 px-2 py-1 rounded text-blue-800">
-                      /profile/{formData.usertag}
-                    </code>
-                  </p>
-                </div>
-              )}
             </div>
 
-            {/* Биография */}
             <div>
               <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
                 Биография
@@ -379,25 +562,16 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                 value={formData.bio}
                 onChange={handleChange}
                 rows="4"
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
-                  errors.bio ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
                 placeholder="Расскажите о себе..."
                 maxLength="500"
+                disabled={isUploading}
               />
-              <div className="flex justify-between mt-1">
-                {errors.bio ? (
-                  <p className="text-sm text-red-600">{errors.bio}</p>
-                ) : (
-                  <div></div>
-                )}
-                <div className="text-sm text-gray-500">
-                  {formData.bio.length}/500
-                </div>
+              <div className="text-sm text-gray-500 text-right mt-1">
+                {formData.bio.length}/500
               </div>
             </div>
 
-            {/* Местоположение */}
             <div>
               <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
                 Местоположение
@@ -410,10 +584,10 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
                 placeholder="Город, страна"
+                disabled={isUploading}
               />
             </div>
 
-            {/* Веб-сайт */}
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2">
                 Веб-сайт
@@ -424,17 +598,12 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                 name="website"
                 value={formData.website}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200 ${
-                  errors.website ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
                 placeholder="https://example.com"
+                disabled={isUploading}
               />
-              {errors.website && (
-                <p className="mt-2 text-sm text-red-600">{errors.website}</p>
-              )}
             </div>
 
-            {/* Видимость профиля */}
             <div>
               <label htmlFor="profileVisibility" className="block text-sm font-medium text-gray-700 mb-2">
                 Видимость профиля
@@ -445,38 +614,33 @@ export default function ProfileEditModal({ isOpen, onClose, profile, onUpdate })
                 value={formData.profileVisibility}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition duration-200"
+                disabled={isUploading}
               >
                 <option value="PUBLIC">Публичный</option>
                 <option value="FRIENDS_ONLY">Только друзья</option>
                 <option value="PRIVATE">Приватный</option>
               </select>
-              <p className="mt-2 text-sm text-gray-500">
-                {formData.profileVisibility === 'PUBLIC' && 'Ваш профиль и посты видны всем пользователям'}
-                {formData.profileVisibility === 'FRIENDS_ONLY' && 'Ваши посты видны только друзьям, профиль видят все'}
-                {formData.profileVisibility === 'PRIVATE' && 'Ваш профиль и посты видны только вам'}
-              </p>
             </div>
 
-            {/* Ошибка отправки */}
             {errors.submit && (
               <div className="bg-red-50 border border-red-200 rounded-xl p-4">
                 <p className="text-sm text-red-600">{errors.submit}</p>
               </div>
             )}
 
-            {/* Кнопки */}
             <div className="flex space-x-3 pt-4">
               <button
                 type="button"
-                onClick={onClose}
-                className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-medium hover:border-gray-400 hover:bg-gray-50 transition duration-200"
+                onClick={handleClose}
+                disabled={isUploading}
+                className="flex-1 border border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-medium hover:border-gray-400 hover:bg-gray-50 transition duration-200 disabled:opacity-50"
               >
                 Отмена
               </button>
               <button
                 type="submit"
                 disabled={isLoading || isUploading}
-                className="flex-1 bg-emerald-500 text-white py-3 px-6 rounded-xl font-medium hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="flex-1 bg-emerald-500 text-white py-3 px-6 rounded-xl font-medium hover:bg-emerald-600 transition duration-200 disabled:opacity-50 flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>

@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { getUserGroup, getLevelProgress } from '../../../lib/userLevels';
+import { writeFile, mkdir, unlink, rename } from 'fs/promises';
+import { join } from 'path';
 
 export async function GET(request) {
   try {
@@ -60,7 +62,6 @@ export async function GET(request) {
           canViewPosts = true;
           break;
         case 'FRIENDS_ONLY':
-          // Проверяем, являются ли пользователи друзьями
           const friendship = await prisma.friendship.findFirst({
             where: {
               OR: [
@@ -147,7 +148,6 @@ export async function GET(request) {
       posts,
       vacations,
       canViewPosts,
-      // Добавляем информацию об уровне
       userGroup,
       levelProgress
     };
@@ -163,7 +163,6 @@ export async function GET(request) {
   }
 }
 
-// API для обновления профиля
 export async function PUT(request) {
   try {
     const accessToken = request.cookies.get('accessToken')?.value;
@@ -177,7 +176,7 @@ export async function PUT(request) {
       return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
     }
 
-    const { name, usertag, bio, location, website, profileVisibility } = await request.json();
+    const { name, usertag, bio, location, website, profileVisibility, avatar, banner } = await request.json();
 
     // Валидация
     if (!name || !usertag) {
@@ -218,17 +217,83 @@ export async function PUT(request) {
       );
     }
 
+    // Получаем текущий профиль для проверки старых изображений
+    const currentUser = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { avatar: true, banner: true }
+    });
+
+    // Обрабатываем перемещение временных изображений
+    const updateData = { name, usertag, bio, location, website, profileVisibility };
+    
+    if (avatar && avatar.startsWith('/uploads/temp/')) {
+      const filename = avatar.split('/').pop();
+      const tempPath = join(process.cwd(), 'public', avatar);
+      const finalPath = join(process.cwd(), 'public', 'uploads', 'avatars', filename);
+      await mkdir(join(process.cwd(), 'public', 'uploads', 'avatars'), { recursive: true });
+      
+      // Перемещаем файл
+      try {
+        await rename(tempPath, finalPath);
+        updateData.avatar = `/uploads/avatars/${filename}`;
+        
+        // Удаляем старый аватар, если он существует
+        if (currentUser.avatar && currentUser.avatar.startsWith('/uploads/avatars/')) {
+          const oldAvatarPath = join(process.cwd(), 'public', currentUser.avatar);
+          try {
+            await unlink(oldAvatarPath);
+            console.log(`Deleted old avatar: ${oldAvatarPath}`);
+          } catch (error) {
+            if (error.code !== 'ENOENT') {
+              console.error(`Error deleting old avatar ${oldAvatarPath}:`, error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error moving avatar ${tempPath}:`, error);
+        return NextResponse.json(
+          { message: 'Ошибка при обработке аватара' },
+          { status: 500 }
+        );
+      }
+    }
+
+    if (banner && banner.startsWith('/uploads/temp/')) {
+      const filename = banner.split('/').pop();
+      const tempPath = join(process.cwd(), 'public', banner);
+      const finalPath = join(process.cwd(), 'public', 'uploads', 'banners', filename);
+      await mkdir(join(process.cwd(), 'public', 'uploads', 'banners'), { recursive: true });
+      
+      // Перемещаем файл
+      try {
+        await rename(tempPath, finalPath);
+        updateData.banner = `/uploads/banners/${filename}`;
+        
+        // Удаляем старый баннер, если он существует
+        if (currentUser.banner && currentUser.banner.startsWith('/uploads/banners/')) {
+          const oldBannerPath = join(process.cwd(), 'public', currentUser.banner);
+          try {
+            await unlink(oldBannerPath);
+            console.log(`Deleted old banner: ${oldBannerPath}`);
+          } catch (error) {
+            if (error.code !== 'ENOENT') {
+              console.error(`Error deleting old banner ${oldBannerPath}:`, error);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(`Error moving banner ${tempPath}:`, error);
+        return NextResponse.json(
+          { message: 'Ошибка при обработке баннера' },
+          { status: 500 }
+        );
+      }
+    }
+
     // Обновляем профиль
     const updatedUser = await prisma.user.update({
       where: { id: decoded.userId },
-      data: {
-        name,
-        usertag,
-        bio,
-        location,
-        website,
-        profileVisibility
-      },
+      data: updateData,
       select: {
         id: true,
         name: true,

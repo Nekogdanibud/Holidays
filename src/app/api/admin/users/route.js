@@ -32,29 +32,47 @@ export async function GET(request) {
     const where = search ? {
       OR: [
         { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
+        { email: { contains: search, mode: 'insensitive' } },
+        { usertag: { contains: search, mode: 'insensitive' } }
       ]
     } : {};
 
-    const [groups, total] = await Promise.all([
-      prisma.group.findMany({
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          usertag: true,
+          email: true,
+          avatar: true,
+          role: true,
+          createdAt: true,
+          location: true,
+          website: true,
+          experiencePoints: true,
           _count: {
             select: {
-              userGroups: true
+              vacationMembers: {
+                where: { status: 'accepted' }
+              }
             }
           }
         },
-        orderBy: { level: 'asc' },
+        orderBy: { createdAt: 'desc' },
         skip,
         take: limit
       }),
-      prisma.group.count({ where })
+      prisma.user.count({ where })
     ]);
 
+    const formattedUsers = users.map(user => ({
+      ...user,
+      vacationCount: user._count.vacationMembers
+    }));
+
     return NextResponse.json({
-      groups,
+      users: formattedUsers,
       pagination: {
         page,
         limit,
@@ -64,7 +82,7 @@ export async function GET(request) {
     });
 
   } catch (error) {
-    console.error('Ошибка получения групп:', error);
+    console.error('Ошибка получения пользователей:', error);
     return NextResponse.json(
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
@@ -72,7 +90,7 @@ export async function GET(request) {
   }
 }
 
-export async function POST(request) {
+export async function DELETE(request) {
   try {
     const accessToken = request.cookies.get('accessToken')?.value;
 
@@ -85,48 +103,27 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
     }
 
-    const groupData = await request.json();
+    const { userId } = await request.json();
 
-    const requiredFields = ['name', 'description', 'level', 'minPoints', 'color', 'icon', 'badgeText'];
-    for (const field of requiredFields) {
-      if (!groupData[field]) {
-        return NextResponse.json(
-          { message: `Поле ${field} обязательно` },
-          { status: 400 }
-        );
-      }
+    if (!userId) {
+      return NextResponse.json({ message: 'User ID обязателен' }, { status: 400 });
     }
 
-    const newGroup = await prisma.group.create({
-      data: {
-        name: groupData.name,
-        description: groupData.description,
-        level: groupData.level,
-        minPoints: groupData.minPoints,
-        maxPoints: groupData.maxPoints,
-        color: groupData.color,
-        bgColor: groupData.bgColor,
-        icon: groupData.icon,
-        badgeText: groupData.badgeText,
-        isExclusive: groupData.isExclusive || false
-      }
-    });
-
-    return NextResponse.json({
-      message: 'Группа создана',
-      group: newGroup
-    });
-
-  } catch (error) {
-    console.error('Ошибка создания группы:', error);
-    
-    if (error.code === 'P2002') {
+    if (userId === decoded.userId) {
       return NextResponse.json(
-        { message: 'Группа с таким именем или уровнем уже существует' },
-        { status: 409 }
+        { message: 'Нельзя удалить собственный аккаунт' },
+        { status: 400 }
       );
     }
 
+    await prisma.user.delete({
+      where: { id: userId }
+    });
+
+    return NextResponse.json({ message: 'Пользователь удален' });
+
+  } catch (error) {
+    console.error('Ошибка удаления пользователя:', error);
     return NextResponse.json(
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }

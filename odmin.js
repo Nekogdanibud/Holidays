@@ -33,8 +33,8 @@ async function getAllFiles(dirPath, excludedFolders = []) {
 }
 
 async function saveAllFilesContent() {
-    const srcPath = './src/components/profile';
-    const outputFile = './components.txt';
+    const srcPath = './src/app/api/admin';
+    const outputFile = './aapi.txt';
     
     // Исключенные файлы
     const excludedFiles = ['global.css', 'favicon.ico'];

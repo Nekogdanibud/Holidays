@@ -1,3 +1,4 @@
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
@@ -5,6 +6,30 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ENUM ДОЛЖНЫ БЫТЬ ЗДЕСЬ - ВНЕ МОДЕЛЕЙ
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum ProfileVisibility {
+  PUBLIC
+  FRIENDS_ONLY
+  PRIVATE
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum CommentType {
+  POST
+  MEMORY
 }
 
 model User {
@@ -17,6 +42,7 @@ model User {
   avatar                 String?
   banner                 String?
   bio                    String?
+  role                   UserRole              @default(USER)
   location               String?
   website                String?
   usertag                String                @unique
@@ -51,11 +77,11 @@ model Group {
   level       Int      @unique
   minPoints   Int
   maxPoints   Int?
-  color       String   // Цвет текста (например: "text-white", "text-gray-800")
-  bgColor     String?  // Цвет фона в формате Tailwind (например: "bg-gradient-to-r from-purple-500 to-pink-500")
+  color       String
+  bgColor     String?
   icon        String
   badgeText   String
-  isExclusive Boolean  @default(false) // Флаг эксклюзивной группы
+  isExclusive Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -224,11 +250,11 @@ model Memory {
   tags         String[]
   takenAt      DateTime
   updatedAt    DateTime        @updatedAt
-  postComments Comment[]
   author       User            @relation(fields: [authorId], references: [id], onDelete: Cascade)
   location     Location?       @relation(fields: [locationId], references: [id])
   vacation     Vacation        @relation(fields: [vacationId], references: [id], onDelete: Cascade)
   comments     MemoryComment[]
+  postComments Comment[]       // ДОБАВЛЕНО: обратное отношение для Comment
   likes        MemoryLike[]
 
   @@map("memories")
@@ -296,11 +322,22 @@ model Post {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   authorId  String
+  images    PostImage[]
   comments  Comment[]
   likes     PostLike[]
   author    User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("posts")
+}
+
+model PostImage {
+  id        String   @id @default(cuid())
+  url       String
+  postId    String
+  createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@map("post_images")
 }
 
 model PostLike {
@@ -315,18 +352,29 @@ model PostLike {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   content   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
   authorId  String
   postId    String?
   memoryId  String?
-  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  memory    Memory?  @relation(fields: [memoryId], references: [id], onDelete: Cascade)
-  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  images    CommentImage[]
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  memory    Memory?      @relation(fields: [memoryId], references: [id], onDelete: Cascade)
+  post      Post?        @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@map("comments")
+}
+
+model CommentImage {
+  id        String   @id @default(cuid())
+  url       String
+  commentId String
+  createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@map("comment_images")
 }
 
 model Achievement {
@@ -341,16 +389,4 @@ model Achievement {
 
   @@unique([userId, type])
   @@map("achievements")
-}
-
-enum ProfileVisibility {
-  PUBLIC
-  FRIENDS_ONLY
-  PRIVATE
-}
-
-enum FriendRequestStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
 }
