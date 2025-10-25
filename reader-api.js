@@ -40,7 +40,7 @@ async function saveAllFilesContent() {
     const excludedFiles = ['global.css', 'favicon.ico'];
     
     // Исключенные папки
-    const excludedFolders = ['api', 'node_modules', 'dist', 'build', '.git', '.next', 'cache', 'temp'];
+    const excludedFolders = ["posts", "admin", 'api', 'node_modules', 'dist', 'build', '.git', '.next', 'cache', 'temp'];
     
     try {
         console.log('🔍 Поиск файлов...');

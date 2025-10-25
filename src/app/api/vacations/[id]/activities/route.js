@@ -23,7 +23,7 @@ export async function GET(request, { params }) {
         id: id,
         OR: [
           { userId: decoded.userId },
-          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+          { members: { some: { userId: decoded.userId, status: 'ACCEPTED' } } }
         ]
       }
     });
@@ -32,7 +32,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ message: 'Доступ запрещен' }, { status: 403 });
     }
 
-    // ИСПРАВЛЕНО: правильные поля для модели Activity
+    // Получаем активности
     const activities = await prisma.activity.findMany({
       where: { vacationId: id },
       orderBy: { date: 'asc' },

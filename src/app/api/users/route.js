@@ -36,7 +36,7 @@ export async function GET(request) {
 
     console.log('🔍 Поиск пользователей с условиями:', { search, page, limit });
 
-    // Получаем пользователей с правильными полями
+    // Получаем пользователей - ТОЛЬКО ОСНОВНЫЕ ДАННЫЕ
     const users = await prisma.user.findMany({
       where,
       select: {
@@ -48,12 +48,11 @@ export async function GET(request) {
         location: true,
         createdAt: true,
         profileVisibility: true,
+        // УБРАЛ сложные подсчеты - они не нужны для общего списка
         _count: {
           select: {
-            vacationMembers: {
-              where: { status: 'accepted' }
-            },
             posts: true,
+            // Только базовые счетчики
             friendsAsUser1: true,
             friendsAsUser2: true
           }
@@ -69,7 +68,7 @@ export async function GET(request) {
     // Форматируем данные для фронтенда
     const formattedUsers = users.map(user => ({
       ...user,
-      vacationCount: user._count.vacationMembers,
+      // УБРАЛ vacationCount - он не нужен в общем списке
       postCount: user._count.posts,
       friendCount: user._count.friendsAsUser1 + user._count.friendsAsUser2
     }));

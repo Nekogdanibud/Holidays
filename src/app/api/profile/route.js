@@ -102,7 +102,7 @@ export async function GET(request) {
     const vacationMembers = await prisma.vacationMember.findMany({
       where: {
         userId: user.id,
-        status: 'accepted'
+        status: 'ACCEPTED'
       },
       include: {
         vacation: {
@@ -111,7 +111,7 @@ export async function GET(request) {
               select: { id: true, name: true, avatar: true }
             },
             members: {
-              where: { status: 'accepted' },
+              where: { status: 'ACCEPTED' },
               include: {
                 user: {
                   select: { id: true, name: true, avatar: true }

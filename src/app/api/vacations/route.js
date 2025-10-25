@@ -28,7 +28,7 @@ export async function GET(request) {
       where: {
         OR: [
           { userId: decoded.userId }, // Владелец
-          { members: { some: { userId: decoded.userId, status: 'accepted' } } } // Участник
+          { members: { some: { userId: decoded.userId, status: 'ACCEPTED' } } } // Участник
         ]
       },
       include: {
@@ -36,12 +36,13 @@ export async function GET(request) {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            avatar: true
           }
         },
         members: {
           where: {
-            status: 'accepted'
+            status: 'ACCEPTED'
           },
           include: {
             user: {
@@ -49,21 +50,60 @@ export async function GET(request) {
                 id: true,
                 name: true,
                 email: true,
-                avatar: true
+                avatar: true,
+                usertag: true
               }
             }
           }
         },
         activities: {
-          orderBy: { date: 'asc' }
+          orderBy: { date: 'asc' },
+          include: {
+            location: {
+              select: { id: true, name: true, address: true }
+            },
+            participants: {
+              include: {
+                user: {
+                  select: { id: true, name: true, avatar: true }
+                }
+              }
+            }
+          }
         },
-        memories: true,
-        locations: true,
+        memories: {
+          orderBy: { createdAt: 'desc' },
+          take: 12,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            imageUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            isFavorite: true,
+            captureType: true, // Используем captureType вместо isCapture
+            locationId: true,
+            activityId: true,
+            tags: true,
+            takenAt: true,
+            authorId: true,
+            vacationId: true,
+            author: {
+              select: { id: true, name: true, avatar: true }
+            },
+            location: {
+              select: { id: true, name: true, address: true }
+            }
+          }
+        },
         _count: {
           select: {
             activities: true,
             memories: true,
-            members: true,
+            members: {
+              where: { status: 'ACCEPTED' }
+            },
             locations: true
           }
         }
@@ -75,6 +115,16 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Ошибка получения отпусков:', error);
+    
+    // Обработка ошибки отсутствующего поля
+    if (error.code === 'P2022') {
+      console.error('Отсутствует поле в базе данных:', error.meta);
+      return NextResponse.json(
+        { message: 'Ошибка структуры базы данных. Пожалуйста, выполните миграцию.' },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }
@@ -102,7 +152,7 @@ export async function POST(request) {
       );
     }
 
-    const { title, description, destination, startDate, endDate } = await request.json();
+    const { title, description, destination, startDate, endDate, coverImage, isPublic = false } = await request.json();
 
     if (!title || !startDate || !endDate) {
       return NextResponse.json(
@@ -111,21 +161,42 @@ export async function POST(request) {
       );
     }
 
+    // Валидация дат
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start >= end) {
+      return NextResponse.json(
+        { message: 'Дата начала должна быть раньше даты окончания' },
+        { status: 400 }
+      );
+    }
+
+    if (start < new Date()) {
+      return NextResponse.json(
+        { message: 'Дата начала не может быть в прошлом' },
+        { status: 400 }
+      );
+    }
+
     // Создаем отпуск
     const vacation = await prisma.vacation.create({
       data: {
-        title,
-        description,
-        destination,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        title: title.trim(),
+        description: description?.trim() || null,
+        destination: destination?.trim() || null,
+        startDate: start,
+        endDate: end,
+        coverImage: coverImage || null,
+        isPublic: Boolean(isPublic),
         userId: decoded.userId,
         // Автоматически добавляем владельца как участника
         members: {
           create: {
             userId: decoded.userId,
-            role: 'owner',
-            status: 'accepted'
+            role: 'OWNER',
+            status: 'ACCEPTED',
+            joinedAt: new Date()
           }
         }
       },
@@ -134,12 +205,13 @@ export async function POST(request) {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            avatar: true
           }
         },
         members: {
           where: {
-            status: 'accepted'
+            status: 'ACCEPTED'
           },
           include: {
             user: {
@@ -147,14 +219,27 @@ export async function POST(request) {
                 id: true,
                 name: true,
                 email: true,
-                avatar: true
+                avatar: true,
+                usertag: true
               }
             }
           }
         },
-        activities: true,
-        memories: true,
-        locations: true,
+        activities: {
+          orderBy: { date: 'asc' },
+          take: 5
+        },
+        memories: {
+          orderBy: { createdAt: 'desc' },
+          take: 6,
+          select: {
+            id: true,
+            title: true,
+            imageUrl: true,
+            captureType: true,
+            takenAt: true
+          }
+        },
         _count: {
           select: {
             activities: true,
@@ -170,6 +255,14 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Ошибка создания отпуска:', error);
+    
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { message: 'Отпуск с таким названием уже существует' },
+        { status: 409 }
+      );
+    }
+    
     return NextResponse.json(
       { message: 'Внутренняя ошибка сервера' },
       { status: 500 }

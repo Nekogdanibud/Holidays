@@ -1,7 +1,7 @@
 // src/app/api/vacations/[id]/route.js
 import { NextResponse } from 'next/server';
-import { verifyAccessToken } from '../../../../lib/auth';
-import { prisma } from '../../../../lib/prisma';
+import { verifyAccessToken } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function GET(request, { params }) {
   try {
@@ -28,7 +28,7 @@ export async function GET(request, { params }) {
         id: id,
         OR: [
           { userId: decoded.userId },
-          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+          { members: { some: { userId: decoded.userId, status: 'ACCEPTED' } } }
         ]
       },
       include: {
@@ -36,10 +36,10 @@ export async function GET(request, { params }) {
           select: { id: true, name: true, email: true, avatar: true }
         },
         members: {
-          where: { status: 'accepted' },
+          where: { status: 'ACCEPTED' },
           include: {
             user: {
-              select: { id: true, name: true, email: true, avatar: true }
+              select: { id: true, name: true, email: true, avatar: true, usertag: true }
             }
           }
         },
@@ -47,7 +47,6 @@ export async function GET(request, { params }) {
           orderBy: { date: 'asc' },
           take: 10,
           include: {
-            // ИСПРАВЛЕНО: правильные поля для модели Activity
             location: {
               select: { id: true, name: true, address: true }
             },
@@ -63,9 +62,26 @@ export async function GET(request, { params }) {
         memories: {
           orderBy: { createdAt: 'desc' },
           take: 12,
-          include: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            imageUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            isFavorite: true,
+            captureType: true, // Используем существующее поле
+            locationId: true,
+            activityId: true,
+            tags: true,
+            takenAt: true,
+            authorId: true,
+            vacationId: true,
             author: {
               select: { id: true, name: true, avatar: true }
+            },
+            location: {
+              select: { id: true, name: true, address: true }
             }
           }
         },
@@ -73,7 +89,9 @@ export async function GET(request, { params }) {
           select: {
             activities: true,
             memories: true,
-            members: true,
+            members: {
+              where: { status: 'ACCEPTED' }
+            },
             locations: true
           }
         }
@@ -90,7 +108,6 @@ export async function GET(request, { params }) {
       ...vacation,
       activities: vacation.activities.map(activity => ({
         ...activity,
-        // Берем первого участника как "автора" активности
         author: activity.participants[0]?.user || null,
         participants: activity.participants.map(p => p.user)
       }))

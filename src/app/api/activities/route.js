@@ -1,7 +1,7 @@
 // src/app/api/activities/route.js
 import { NextResponse } from 'next/server';
-import { verifyAccessToken } from '../../../lib/auth';
-import { prisma } from '../../../lib/prisma';
+import { verifyAccessToken } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request) {
   try {
@@ -16,7 +16,20 @@ export async function POST(request) {
       return NextResponse.json({ message: 'Недействительный токен' }, { status: 401 });
     }
 
-    const { title, description, date, type, vacationId, locationId } = await request.json();
+    const { 
+      title, 
+      description, 
+      date, 
+      type, 
+      vacationId, 
+      locationId, 
+      status = 'PLANNED', 
+      priority = 'MEDIUM', 
+      startTime, 
+      endTime, 
+      cost, 
+      notes 
+    } = await request.json();
 
     if (!title || !date || !type || !vacationId) {
       return NextResponse.json(
@@ -31,7 +44,7 @@ export async function POST(request) {
         id: vacationId,
         OR: [
           { userId: decoded.userId },
-          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+          { members: { some: { userId: decoded.userId, status: 'ACCEPTED', role: { in: ['OWNER', 'CO_ORGANIZER'] } } } }
         ]
       }
     });
@@ -43,10 +56,16 @@ export async function POST(request) {
     // Создаем активность
     const activity = await prisma.activity.create({
       data: {
-        title,
-        description,
+        title: title.trim(),
+        description: description?.trim() || null,
         date: new Date(date),
         type,
+        status,
+        priority,
+        startTime: startTime || null,
+        endTime: endTime || null,
+        cost: cost ? parseFloat(cost) : null,
+        notes: notes?.trim() || null,
         vacationId,
         locationId: locationId || null
       },
@@ -60,6 +79,9 @@ export async function POST(request) {
               select: { id: true, name: true, avatar: true }
             }
           }
+        },
+        vacation: {
+          select: { id: true, title: true }
         }
       }
     });
@@ -69,7 +91,7 @@ export async function POST(request) {
       data: {
         activityId: activity.id,
         userId: decoded.userId,
-        status: 'going'
+        status: 'GOING'
       }
     });
 
@@ -86,18 +108,14 @@ export async function POST(request) {
               select: { id: true, name: true, avatar: true }
             }
           }
+        },
+        vacation: {
+          select: { id: true, title: true }
         }
       }
     });
 
-    // Форматируем для ответа
-    const formattedActivity = {
-      ...updatedActivity,
-      author: updatedActivity.participants[0]?.user || null,
-      participants: updatedActivity.participants.map(p => p.user)
-    };
-
-    return NextResponse.json(formattedActivity, { status: 201 });
+    return NextResponse.json(updatedActivity, { status: 201 });
 
   } catch (error) {
     console.error('Ошибка создания активности:', error);

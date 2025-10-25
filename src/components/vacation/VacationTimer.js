@@ -1,4 +1,4 @@
-// src/components/vacation/VacationTimer.js
+// components/vacation/VacationTimer.js
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -6,10 +6,87 @@ import { useState, useEffect } from 'react';
 export default function VacationTimer({ vacation }) {
   const [timeLeft, setTimeLeft] = useState({
     status: 'upcoming',
-    days: 0
+    days: 0,
+    hours: 0,
+    minutes: 0
   });
 
-  // Функция для правильного склонения слова "день"
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const startDate = new Date(vacation.startDate);
+      const endDate = new Date(vacation.endDate);
+      
+      if (now < startDate) {
+        const diff = startDate - now;
+        return {
+          status: 'upcoming',
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        };
+      } else if (now <= endDate) {
+        const diff = endDate - now;
+        return {
+          status: 'current',
+          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+        };
+      } else {
+        return {
+          status: 'past',
+          days: 0,
+          hours: 0,
+          minutes: 0
+        };
+      }
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 60000);
+
+    return () => clearInterval(timer);
+  }, [vacation]);
+
+  const getStatusConfig = () => {
+    switch (timeLeft.status) {
+      case 'upcoming':
+        return {
+          title: 'До начала отпуска',
+          gradient: 'from-blue-500 to-cyan-500',
+          emoji: '🛩️',
+          description: 'Скоро начнется ваше путешествие!'
+        };
+      case 'current':
+        return {
+          title: 'До конца отпуска',
+          gradient: 'from-green-500 to-emerald-500',
+          emoji: '🎉',
+          description: 'Наслаждайтесь каждым моментом!'
+        };
+      case 'past':
+        return {
+          title: 'Отпуск завершен',
+          gradient: 'from-purple-500 to-pink-500',
+          emoji: '🏆',
+          description: 'Надеемся, вам понравилось путешествие!'
+        };
+      default:
+        return {
+          title: 'Отпуск',
+          gradient: 'from-gray-500 to-gray-600',
+          emoji: '📅',
+          description: ''
+        };
+    }
+  };
+
+  const config = getStatusConfig();
+
   const getDaysText = (days) => {
     const lastDigit = days % 10;
     const lastTwoDigits = days % 100;
@@ -29,150 +106,61 @@ export default function VacationTimer({ vacation }) {
     return 'дней';
   };
 
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const startDate = new Date(vacation.startDate);
-      const endDate = new Date(vacation.endDate);
-      
-      if (now < startDate) {
-        const diff = startDate - now;
-        return {
-          status: 'upcoming',
-          days: Math.floor(diff / (1000 * 60 * 60 * 24))
-        };
-      } else if (now <= endDate) {
-        const diff = endDate - now;
-        return {
-          status: 'current',
-          days: Math.floor(diff / (1000 * 60 * 60 * 24))
-        };
-      } else {
-        return {
-          status: 'past',
-          days: 0
-        };
-      }
-    };
-
-    setTimeLeft(calculateTimeLeft());
-    
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, [vacation]);
-
-  const getStatusConfig = () => {
-    switch (timeLeft.status) {
-      case 'upcoming':
-        return {
-          text: 'ДО НАЧАЛА ОТПУСКА',
-          bgGradient: 'from-blue-50/90 to-sky-50/70',
-          borderColor: 'border-blue-200/30',
-          textColor: 'text-blue-700',
-          emoji: '🛩️',
-          // МЯГКИЙ СИНИЙ РАДИАЛЬНЫЙ ГРАДИЕНТ
-          radialGradient: 'radial-gradient(circle at center, #93c5fd 0%, #60a5fa 40%, #3b82f6 80%)',
-          daysText: 'text-white'
-        };
-      case 'current':
-        return {
-          text: 'ДО КОНЦА ОТПУСКА',
-          bgGradient: 'from-emerald-50/90 to-teal-50/70',
-          borderColor: 'border-emerald-200/30',
-          textColor: 'text-emerald-700',
-          emoji: '🎉',
-          radialGradient: 'radial-gradient(circle at center, #86efac 0%, #4ade80 40%, #16a34a 80%)',
-          daysText: 'text-white'
-        };
-      case 'past':
-        return {
-          text: 'ОТПУСК ЗАВЕРШЕН',
-          bgGradient: 'from-purple-50/90 to-pink-50/70',
-          borderColor: 'border-purple-200/30',
-          textColor: 'text-purple-700',
-          emoji: '🏆',
-          radialGradient: 'radial-gradient(circle at center, #d8b4fe 0%, #c084fc 40%, #a855f7 80%)',
-          daysText: 'text-white'
-        };
-      default:
-        return {
-          text: '',
-          bgGradient: 'from-gray-50/90 to-gray-100/70',
-          borderColor: 'border-gray-200/30',
-          textColor: 'text-gray-700',
-          emoji: '📅',
-          radialGradient: 'radial-gradient(circle at center, #d1d5db 0%, #9ca3af 40%, #6b7280 80%)',
-          daysText: 'text-white'
-        };
-    }
-  };
-
-  const config = getStatusConfig();
-  const daysText = getDaysText(timeLeft.days);
-
-  if (timeLeft.status === 'past') {
-    return (
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
       <div className="text-center">
-        <div className={`bg-gradient-to-br ${config.bgGradient} backdrop-blur-sm ${config.textColor} rounded-2xl p-8 max-w-md mx-auto shadow-lg border ${config.borderColor}`}>
-          <div className="text-5xl mb-4">{config.emoji}</div>
-          <h2 className="text-2xl font-bold mb-2">{config.text}</h2>
-          <p className="text-lg opacity-80 mb-4">Надеемся, вам понравилось путешествие!</p>
-          {vacation.destination && (
-            <div className="bg-white/30 rounded-xl py-3 px-4 border border-white/20 backdrop-blur-sm">
-              <span className="text-sm font-medium">📍 {vacation.destination}</span>
+        <div className={`bg-gradient-to-r ${config.gradient} text-white rounded-2xl p-8 max-w-md mx-auto shadow-xl`}>
+          <div className="text-4xl mb-4 transform hover:scale-110 transition-transform duration-300">
+            {config.emoji}
+          </div>
+          
+          <h2 className="text-2xl font-bold mb-2 drop-shadow-sm">{config.title}</h2>
+          <p className="text-white/80 mb-6 text-sm">{config.description}</p>
+          
+          {timeLeft.status !== 'past' ? (
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <div className="flex justify-center space-x-6">
+                <div className="text-center">
+                  <div className="text-4xl font-bold drop-shadow-md">{timeLeft.days}</div>
+                  <div className="text-sm opacity-90 mt-1">{getDaysText(timeLeft.days)}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold drop-shadow-md">{timeLeft.hours}</div>
+                  <div className="text-sm opacity-90 mt-1">часов</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-4xl font-bold drop-shadow-md">{timeLeft.minutes}</div>
+                  <div className="text-sm opacity-90 mt-1">мин</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+              <p className="text-lg font-semibold">Время создавать воспоминания!</p>
+              <p className="text-sm opacity-90 mt-2">Поделитесь фотографиями и впечатлениями</p>
             </div>
           )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="text-center">
-      <div className={`bg-gradient-to-br ${config.bgGradient} backdrop-blur-sm ${config.textColor} rounded-2xl p-8 max-w-sm mx-auto shadow-lg border ${config.borderColor}`}>
-        
-        {/* Статус и эмодзи */}
-        <div className="mb-8">
-          <div className="text-4xl mb-3 opacity-90">{config.emoji}</div>
-          <h2 className="text-lg font-semibold opacity-90">{config.text}</h2>
-        </div>
-
-        {/* КВАДРАТ С МЯГКИМ СИНИМ ГРАДИЕНТОМ */}
-        <div className="mb-6 flex justify-center">
-          <div 
-            className={`${config.daysText} rounded-2xl p-8 border border-white/40 shadow-2xl backdrop-blur-sm w-52 h-52 flex flex-col items-center justify-center transform hover:scale-105 transition-transform duration-300 relative overflow-hidden`}
-            style={{ background: config.radialGradient }}
-          >
-            {/* Мягкий оверлей для еще более нежного эффекта */}
-            <div className="absolute inset-0 bg-white/5 rounded-2xl"></div>
-            
-            {/* Контент */}
-            <div className="relative z-10">
-              <div className="text-6xl font-bold mb-2 leading-none drop-shadow-lg">
-                {timeLeft.days}
-              </div>
-              <div className="text-xl font-medium opacity-95 drop-shadow">{daysText}</div>
+          
+          <div className="mt-6 pt-4 border-t border-white/20">
+            <div className="text-sm opacity-80">
+              {new Date(vacation.startDate).toLocaleDateString('ru-RU', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              })} - {new Date(vacation.endDate).toLocaleDateString('ru-RU', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+              })}
             </div>
+            {vacation.destination && (
+              <div className="text-sm opacity-80 mt-1 flex items-center justify-center">
+                <span className="mr-1">📍</span>
+                {vacation.destination}
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Даты отпуска */}
-        <div className="bg-white/40 rounded-xl py-4 px-5 border border-white/30 backdrop-blur-sm mb-3">
-          <div className="text-sm font-medium opacity-80 mb-1">Даты отпуска</div>
-          <div className="text-base font-semibold">
-            {new Date(vacation.startDate).toLocaleDateString('ru-RU')} - {new Date(vacation.endDate).toLocaleDateString('ru-RU')}
-          </div>
-        </div>
-
-        {/* Название отпуска */}
-        {vacation.destination && (
-          <div className="text-sm opacity-70 font-medium">
-            📍 {vacation.destination}
-          </div>
-        )}
       </div>
     </div>
   );

@@ -24,7 +24,7 @@ export async function GET(request, { params }) {
         id: id,
         OR: [
           { userId: decoded.userId },
-          { members: { some: { userId: decoded.userId, status: 'accepted' } } }
+          { members: { some: { userId: decoded.userId, status: 'ACCEPTED' } } }
         ]
       }
     });

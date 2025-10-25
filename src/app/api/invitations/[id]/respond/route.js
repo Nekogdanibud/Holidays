@@ -63,8 +63,8 @@ export async function POST(request, { params }) {
           data: {
             vacationId: invitation.vacationId,
             userId: user.id,
-            role: 'member',
-            status: 'accepted',
+            role: 'MEMBER', // ИСПРАВЛЕНО: было 'member'
+            status: 'ACCEPTED', // ИСПРАВЛЕНО: было 'accepted'
             joinedAt: new Date()
           }
         });
