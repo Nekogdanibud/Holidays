@@ -1,9 +1,7 @@
-// src/app/api/activities/[id]/route.js (исправленная версия)
+// src/app/api/activities/[id]/route.js (ИСПРАВЛЕННАЯ ВЕРСИЯ)
 import { NextResponse } from 'next/server';
 import { verifyAccessToken } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { writeFile, mkdir, unlink } from 'fs/promises';
-import { join } from 'path';
 
 export async function GET(request, { params }) {
   try {
@@ -21,7 +19,7 @@ export async function GET(request, { params }) {
 
     console.log('🔍 Получение активности:', { activityId: id, userId: decoded.userId });
 
-    // Получаем активность с ВСЕМИ участниками
+    // Получаем активность с фотографиями ТОЛЬКО этой активности
     const activity = await prisma.activity.findFirst({
       where: {
         id: id,
@@ -77,6 +75,23 @@ export async function GET(request, { params }) {
               }
             }
           }
+        },
+        // ВАЖНО: только фото с activityId = этой активности
+        memories: {
+          where: {
+            activityId: id  // ТОЛЬКО фото этой активности
+          },
+          include: {
+            author: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+                usertag: true
+              }
+            }
+          },
+          orderBy: { takenAt: 'asc' }
         }
       }
     });
@@ -86,52 +101,22 @@ export async function GET(request, { params }) {
       return NextResponse.json({ message: 'Активность не найдена' }, { status: 404 });
     }
 
-    // Получаем фотографии для этой активности
-    const memories = await prisma.memory.findMany({
-      where: {
-        OR: [
-          { activityId: id },
-          { 
-            AND: [
-              { vacationId: activity.vacationId },
-              { 
-                takenAt: {
-                  gte: new Date(activity.date.setHours(0, 0, 0, 0)),
-                  lt: new Date(activity.date.setHours(23, 59, 59, 999))
-                }
-              }
-            ]
-          }
-        ]
-      },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-            usertag: true
-          }
-        }
-      },
-      orderBy: { takenAt: 'asc' }
+    console.log('✅ Активность загружена:', {
+      title: activity.title,
+      activityPhotosCount: activity.memories?.length || 0,
+      activityPhotos: activity.memories?.map(m => ({
+        id: m.id,
+        activityId: m.activityId,
+        title: m.title
+      }))
     });
 
     // Формируем ответ с правильной структурой
     const response = {
       ...activity,
-      memories,
       goingCount: activity.participants?.filter(p => p.status === 'GOING').length || 0,
       goingParticipants: activity.participants?.filter(p => p.status === 'GOING') || []
     };
-
-    console.log('✅ Активность загружена:', {
-      title: activity.title,
-      participants: activity.participants?.length,
-      goingCount: response.goingCount,
-      hasBanner: !!activity.bannerImage,
-      location: activity.location
-    });
 
     return NextResponse.json(response);
 

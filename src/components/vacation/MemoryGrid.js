@@ -1,24 +1,11 @@
 // src/components/vacation/MemoryGrid.js
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 
-export default function MemoryGrid({ memories = [], showBadge = false }) {
+const MemoryGrid = memo(({ memories = [], showBadge = false, onPhotoClick }) => {
   const [imageErrors, setImageErrors] = useState({});
   const [imageLoads, setImageLoads] = useState({});
-
-  // Функция для получения базового URL с учетом кастомного домена
-  const getBaseUrl = () => {
-    if (process.env.NODE_ENV === 'production') {
-      return 'https://holidays.breezeway.su';
-    }
-    
-    if (typeof window !== 'undefined') {
-      return window.location.origin;
-    }
-    
-    return 'http://localhost:3000';
-  };
 
   // Защита от undefined или null
   if (!memories || !Array.isArray(memories)) {
@@ -43,8 +30,7 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
 
   console.log('🖼️ MemoryGrid данные:', {
     totalMemories: memories.length,
-    validMemories: validMemories.length,
-    baseUrl: getBaseUrl()
+    validMemories: validMemories.length
   });
 
   if (validMemories.length === 0) {
@@ -59,28 +45,12 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
   }
 
   const getImageUrl = (imageUrl) => {
-    if (!imageUrl) {
-      return '/placeholder-image.jpg';
-    }
-    
-    // Если уже полный URL - оставляем как есть
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    
-    // Корректируем относительные пути
-    let correctedUrl = imageUrl;
-    
-    // Добавляем /uploads/memories/ если путь не начинается с /
+    if (!imageUrl) return '/placeholder-image.jpg';
+    if (imageUrl.startsWith('http')) return imageUrl;
     if (!imageUrl.startsWith('/uploads/') && !imageUrl.startsWith('/')) {
-      correctedUrl = `/uploads/memories/${imageUrl}`;
+      return `/uploads/memories/${imageUrl}`;
     }
-    
-    // Формируем полный URL с правильным доменом
-    const baseUrl = getBaseUrl();
-    const fullUrl = `${baseUrl}${correctedUrl}`;
-    
-    return fullUrl;
+    return imageUrl;
   };
 
   const handleImageError = (memoryId, imageUrl) => {
@@ -94,17 +64,41 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
     setImageErrors(prev => ({ ...prev, [memoryId]: false }));
   };
 
+  const handlePhotoClick = (memory, index) => {
+    console.log('🖱️ MemoryGrid: Клик по фото', {
+      index,
+      memoryId: memory?.id,
+      memoryTitle: memory?.title,
+      onPhotoClickExists: !!onPhotoClick,
+      totalMemories: validMemories.length
+    });
+    
+    if (onPhotoClick && typeof onPhotoClick === 'function') {
+      try {
+        onPhotoClick(memory, validMemories, index);
+      } catch (error) {
+        console.error('❌ Ошибка в onPhotoClick:', error);
+      }
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {validMemories.map((memory) => {
+      {validMemories.map((memory, index) => {
+        if (!memory || typeof memory !== 'object') {
+          console.error('❌ Некорректный memory объект:', memory);
+          return null;
+        }
+
         const imageUrl = getImageUrl(memory.imageUrl);
         const hasError = imageErrors[memory.id];
         const hasLoaded = imageLoads[memory.id];
         
         return (
           <div
-            key={memory.id}
+            key={memory.id || `memory-${index}`}
             className="aspect-square rounded-lg overflow-hidden group cursor-pointer relative bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+            onClick={() => handlePhotoClick(memory, index)}
           >
             {!hasError ? (
               <div className="relative w-full h-full">
@@ -121,7 +115,7 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
                   decoding="async"
                 />
                 
-                {/* Loading state - ТОЛЬКО пока не загрузилось */}
+                {/* Loading state */}
                 {!hasLoaded && (
                   <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
                     <div className="text-gray-400 text-center">
@@ -131,14 +125,14 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
                   </div>
                 )}
 
-                {/* Бейдж для capture-фото - поверх изображения */}
+                {/* Бейдж для capture-фото */}
                 {showBadge && memory.captureType && hasLoaded && (
                   <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full shadow-lg z-10">
                     ⭐
                   </div>
                 )}
 
-                {/* Hover overlay - ТОЛЬКО при наведении и после загрузки */}
+                {/* Hover overlay */}
                 {hasLoaded && (
                   <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-200" />
                 )}
@@ -150,9 +144,6 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
                 <div className="text-xs text-gray-500 text-center">
                   Ошибка загрузки
                 </div>
-                <div className="text-xs text-gray-400 mt-1 text-center break-all">
-                  {memory.imageUrl}
-                </div>
               </div>
             )}
           </div>
@@ -160,4 +151,8 @@ export default function MemoryGrid({ memories = [], showBadge = false }) {
       })}
     </div>
   );
-}
+});
+
+MemoryGrid.displayName = 'MemoryGrid';
+
+export default MemoryGrid;
