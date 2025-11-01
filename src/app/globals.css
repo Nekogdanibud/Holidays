@@ -5,6 +5,13 @@
   --foreground: #171717;
 }
 
+/* Уменьшение масштаба всего сайта */
+
+html {
+  zoom: 0.8;
+}
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

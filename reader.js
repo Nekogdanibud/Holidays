@@ -33,7 +33,7 @@ async function getAllFiles(dirPath, excludedFolders = []) {
 }
 
 async function saveAllFilesContent() {
-    const srcPath = './src/components/vacation';
+    const srcPath = './src/components/activities';
     const outputFile = './components.txt';
     
     // Исключенные файлы

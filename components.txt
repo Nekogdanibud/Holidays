@@ -1,29 +1,387 @@
 ОТЧЕТ О ФАЙЛАХ
-Папка: /OTPUSK/otpusk-app/Holidays/src/components/vacation
-Дата создания: 10/25/2025, 7:51:28 PM
-Всего файлов: 16
+Папка: /OTPUSK/otpusk-app/Holidays/src/components/activities
+Дата создания: 10/30/2025, 9:38:40 PM
+Всего файлов: 9
 Исключенные папки: admin, app, api, node_modules, dist, build, .git, .next, cache, temp
 Исключенные файлы: global.css, favicon.ico
 ================================================================================
 
 
 ================================================================================
-ФАЙЛ: ActivityCard.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/ActivityCard.js
-РАЗМЕР: 7489 символов
+ФАЙЛ: ActivityEditTab.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ActivityEditTab.js
+РАЗМЕР: 11132 символов
 ================================================================================
 
-// src/components/vacation/ActivityCard.js
-'use client';
-
-import Link from 'next/link';
 import { useState } from 'react';
 
-export default function ActivityCard({ activity, vacationId }) {
-  const [participationStatus, setParticipationStatus] = useState(
-    activity.participants?.[0]?.status || 'NOT_GOING'
-  );
+export default function ActivityEditTab({ 
+  activity, 
+  editForm, 
+  onEditChange, 
+  onSave, 
+  onCancel,
+  isSaving,
+  formErrors,
+  bannerPreview,
+  onRemoveBanner 
+}) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">Редактировать активность</h3>
+        <button
+          onClick={onCancel}
+          className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition duration-200 text-sm font-medium"
+        >
+          Отменить редактирование
+        </button>
+      </div>
 
+      <div className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Баннер активности
+          </label>
+          <div className="space-y-4">
+            {(activity.bannerImage || bannerPreview) && (
+              <div className="relative">
+                <img
+                  src={bannerPreview || activity.bannerImage}
+                  alt="Баннер активности"
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={onRemoveBanner}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                  title="Удалить баннер"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            )}
+            
+            <input
+              type="file"
+              name="bannerImage"
+              onChange={onEditChange}
+              accept="image/*"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+            <p className="text-sm text-gray-500">
+              Рекомендуемый размер: 1200x400px. Форматы: JPG, PNG, WebP
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Название активности *
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={editForm.title}
+              onChange={onEditChange}
+              required
+              className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                formErrors.title ? 'border-red-300' : 'border-gray-300'
+              }`}
+            />
+            {formErrors.title && (
+              <p className="mt-1 text-sm text-red-600">{formErrors.title}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Тип активности *
+            </label>
+            <select
+              name="type"
+              value={editForm.type}
+              onChange={onEditChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="FLIGHT">✈️ Перелет</option>
+              <option value="HOTEL">🏨 Отель</option>
+              <option value="RESTAURANT">🍽️ Ресторан</option>
+              <option value="ATTRACTION">🏛️ Достопримечательность</option>
+              <option value="TRANSPORTATION">🚗 Транспорт</option>
+              <option value="EVENT">🎭 Мероприятие</option>
+              <option value="ACTIVITY">🎯 Активность</option>
+              <option value="SHOPPING">🛍️ Шоппинг</option>
+              <option value="BEACH">🏖️ Пляж</option>
+              <option value="HIKING">🥾 Поход</option>
+              <option value="MUSEUM">🖼️ Музей</option>
+              <option value="CONCERT">🎵 Концерт</option>
+              <option value="SPORTS">⚽ Спорт</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Дата *
+            </label>
+            <input
+              type="date"
+              name="date"
+              value={editForm.date}
+              onChange={onEditChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Статус
+            </label>
+            <select
+              name="status"
+              value={editForm.status}
+              onChange={onEditChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="PLANNED">📅 Запланировано</option>
+              <option value="CONFIRMED">✅ Подтверждено</option>
+              <option value="IN_PROGRESS">🔄 В процессе</option>
+              <option value="COMPLETED">🏁 Завершено</option>
+              <option value="CANCELLED">❌ Отменено</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Время начала
+            </label>
+            <input
+              type="time"
+              name="startTime"
+              value={editForm.startTime}
+              onChange={onEditChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Время окончания
+            </label>
+            <input
+              type="time"
+              name="endTime"
+              value={editForm.endTime}
+              onChange={onEditChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Приоритет
+            </label>
+            <select
+              name="priority"
+              value={editForm.priority}
+              onChange={onEditChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            >
+              <option value="LOW">🔴 Низкий</option>
+              <option value="MEDIUM">🟡 Средний</option>
+              <option value="HIGH">🟢 Высокий</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Стоимость (₽)
+            </label>
+            <input
+              type="number"
+              name="cost"
+              value={editForm.cost}
+              onChange={onEditChange}
+              min="0"
+              step="0.01"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Описание
+          </label>
+          <textarea
+            name="description"
+            value={editForm.description}
+            onChange={onEditChange}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Местоположение
+          </label>
+          <input
+            type="text"
+            name="locationName"
+            value={editForm.locationName}
+            onChange={onEditChange}
+            placeholder="Название места"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent mb-2 ${
+              formErrors.locationName ? 'border-red-300' : 'border-gray-300'
+            }`}
+          />
+          {formErrors.locationName && (
+            <p className="mt-1 text-sm text-red-600 mb-2">{formErrors.locationName}</p>
+          )}
+          <input
+            type="text"
+            name="locationAddress"
+            value={editForm.locationAddress}
+            onChange={onEditChange}
+            placeholder="Адрес"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+              formErrors.locationAddress ? 'border-red-300' : 'border-gray-300'
+            }`}
+          />
+          {formErrors.locationAddress && (
+            <p className="mt-1 text-sm text-red-600">{formErrors.locationAddress}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Заметки
+          </label>
+          <textarea
+            name="notes"
+            value={editForm.notes}
+            onChange={onEditChange}
+            rows={2}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          />
+        </div>
+
+        <div className="flex space-x-3 pt-4">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={isSaving}
+            className="flex-1 px-6 py-3 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200 disabled:opacity-50"
+          >
+            Отмена
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isSaving}
+            className="flex-1 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin"></div>
+                <span>Сохранение...</span>
+              </>
+            ) : (
+              <span>Сохранить изменения</span>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: ActivityGalleryTab.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ActivityGalleryTab.js
+РАЗМЕР: 2264 символов
+================================================================================
+
+import { useState } from 'react';
+import PhotoUpload from '@/components/vacation/PhotoUpload';
+import MemoryGrid from '@/components/vacation/MemoryGrid';
+
+export default function ActivityGalleryTab({ activity, vacationId, activityId, onRefresh }) {
+  const [showUpload, setShowUpload] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Фотографии активности ({activity.memories?.length || 0})
+          </h3>
+          <div className="flex space-x-3">
+            <button 
+              onClick={() => setShowUpload(true)}
+              className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 text-sm font-medium flex items-center space-x-2"
+            >
+              <span>📸</span>
+              <span>Добавить фото</span>
+            </button>
+          </div>
+        </div>
+
+        {activity.memories && activity.memories.length > 0 ? (
+          <MemoryGrid memories={activity.memories} showBadge={true} />
+        ) : (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">📸</span>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Пока нет фотографий
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Добавьте первые фотографии этой активности
+            </p>
+            <button
+              onClick={() => setShowUpload(true)}
+              className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 font-medium"
+            >
+              + Добавить фото
+            </button>
+          </div>
+        )}
+      </div>
+
+      {showUpload && (
+        <PhotoUpload
+          vacationId={vacationId}
+          activityId={activityId}
+          onUpload={() => {
+            setShowUpload(false);
+            onRefresh();
+          }}
+          onCancel={() => setShowUpload(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: ActivityHeader.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ActivityHeader.js
+РАЗМЕР: 2962 символов
+================================================================================
+
+export default function ActivityHeader({ activity, onBack, canEdit }) {
   const getTypeEmoji = (type) => {
     const emojis = {
       FLIGHT: '✈️',
@@ -43,2929 +401,218 @@ export default function ActivityCard({ activity, vacationId }) {
     return emojis[type] || '📅';
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      PLANNED: 'bg-blue-100 text-blue-800',
-      CONFIRMED: 'bg-green-100 text-green-800',
-      IN_PROGRESS: 'bg-yellow-100 text-yellow-800',
-      COMPLETED: 'bg-gray-100 text-gray-800',
-      CANCELLED: 'bg-red-100 text-red-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getPriorityColor = (priority) => {
-    const colors = {
-      LOW: 'bg-red-100 text-red-800',
-      MEDIUM: 'bg-yellow-100 text-yellow-800',
-      HIGH: 'bg-green-100 text-green-800'
-    };
-    return colors[priority] || 'bg-gray-100 text-gray-800';
-  };
-
-  const handleParticipation = async (status) => {
-    try {
-      const response = await fetch(`/api/activities/${activity.id}/participate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        setParticipationStatus(status);
-      }
-    } catch (error) {
-      console.error('Ошибка участия:', error);
-    }
-  };
-
-  const formatTime = (timeString) => {
-    if (!timeString) return '';
-    return timeString.substring(0, 5);
-  };
-
   return (
-    <Link 
-      href={`/vacations/${vacationId}/activities/${activity.id}`}
-      className="block bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md hover:border-emerald-200 transition-all duration-200 group"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3 flex-1 min-w-0">
-          <div className="text-2xl flex-shrink-0">
-            {getTypeEmoji(activity.type)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate group-hover:text-emerald-600 transition-colors">
-              {activity.title}
-            </h3>
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="text-sm text-gray-600">
-                {new Date(activity.date).toLocaleDateString('ru-RU')}
-              </span>
-              {activity.startTime && (
-                <>
-                  <span className="text-gray-400">•</span>
-                  <span className="text-sm text-gray-600">
-                    {formatTime(activity.startTime)}
-                    {activity.endTime && ` - ${formatTime(activity.endTime)}`}
+    <>
+      {activity.bannerImage && (
+        <div className="h-64 w-full bg-gray-200 overflow-hidden">
+          <img
+            src={activity.bannerImage}
+            alt={`Баннер активности ${activity.title}`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      <div className={`bg-white border-b border-gray-200 ${!activity.bannerImage ? 'pt-4' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={onBack}
+                className="flex-shrink-0 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Назад к отпуску"
+              >
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center space-x-2 mb-1">
+                  <span className="text-2xl">{getTypeEmoji(activity.type)}</span>
+                  <h1 className="text-xl font-bold text-gray-900 truncate">{activity.title}</h1>
+                </div>
+                <div className="flex items-center flex-wrap gap-2 text-sm text-gray-600">
+                  <span>
+                    {new Date(activity.date).toLocaleDateString('ru-RU', { 
+                      weekday: 'long', 
+                      day: 'numeric', 
+                      month: 'long' 
+                    })}
                   </span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col items-end space-y-2 flex-shrink-0 ml-3">
-          <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(activity.status)}`}>
-            {activity.status === 'PLANNED' && 'Запланировано'}
-            {activity.status === 'CONFIRMED' && 'Подтверждено'}
-            {activity.status === 'IN_PROGRESS' && 'В процессе'}
-            {activity.status === 'COMPLETED' && 'Завершено'}
-            {activity.status === 'CANCELLED' && 'Отменено'}
-          </span>
-          
-          <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(activity.priority)}`}>
-            {activity.priority === 'LOW' && 'Низкий'}
-            {activity.priority === 'MEDIUM' && 'Средний'}
-            {activity.priority === 'HIGH' && 'Высокий'}
-          </span>
-        </div>
-      </div>
-
-      {activity.description && (
-        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-          {activity.description}
-        </p>
-      )}
-
-      {/* Участники и стоимость */}
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-            </svg>
-            <span>{activity.participants?.length || 0}</span>
-          </div>
-
-          {activity.cost && (
-            <div className="flex items-center space-x-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
-              <span>{parseFloat(activity.cost).toFixed(2)}</span>
-            </div>
-          )}
-
-          {activity.memories && activity.memories.length > 0 && (
-            <div className="flex items-center space-x-1">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>{activity.memories.length}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Быстрое участие */}
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleParticipation('GOING');
-            }}
-            className={`p-1 rounded ${
-              participationStatus === 'GOING' 
-                ? 'bg-green-100 text-green-600' 
-                : 'text-gray-400 hover:text-green-600'
-            }`}
-            title="Участвую"
-          >
-            ✅
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleParticipation('MAYBE');
-            }}
-            className={`p-1 rounded ${
-              participationStatus === 'MAYBE' 
-                ? 'bg-yellow-100 text-yellow-600' 
-                : 'text-gray-400 hover:text-yellow-600'
-            }`}
-            title="Возможно"
-          >
-            ❓
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleParticipation('NOT_GOING');
-            }}
-            className={`p-1 rounded ${
-              participationStatus === 'NOT_GOING' 
-                ? 'bg-red-100 text-red-600' 
-                : 'text-gray-400 hover:text-red-600'
-            }`}
-            title="Не участвую"
-          >
-            ❌
-          </button>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: ActivityDetails.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/ActivityDetails.js
-РАЗМЕР: 2795 символов
-================================================================================
-
-// src/components/vacation/ActivityDetail.js
-'use client';
-
-import { useEffect, useState } from 'react';
-import PhotoUpload from './PhotoUpload';
-import MemoryGrid from './MemoryGrid';
-
-export default function ActivityDetail({ vacationId, activityId }) {
-  const [activity, setActivity] = useState(null);
-  const [captureMemories, setCaptureMemories] = useState([]);
-  const [regularMemories, setRegularMemories] = useState([]);
-  const [tab, setTab] = useState('capture');
-  const [showUpload, setShowUpload] = useState(false);
-
-  useEffect(() => {
-    Promise.all([
-      fetch(`/api/vacations/${vacationId}/activities/${activityId}`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`/api/memories?activityId=${activityId}&captureType=ACTIVITY_MOMENT`, { credentials: 'include' }).then(r => r.json()),
-      fetch(`/api/memories?activityId=${activityId}&captureType=null`, { credentials: 'include' }).then(r => r.json()),
-    ]).then(([act, cap, reg]) => {
-      setActivity(act);
-      setCaptureMemories(cap);
-      setRegularMemories(reg);
-    });
-  }, [vacationId, activityId]);
-
-  if (!activity) return <div className="p-6">Загрузка…</div>;
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h1 className="text-2xl font-bold mb-2">{activity.title}</h1>
-      <p className="text-gray-600 mb-4">
-        {new Date(activity.date).toLocaleDateString('ru-RU')} • {activity.location?.name}
-      </p>
-
-      <div className="flex space-x-4 mb-4">
-        <button
-          onClick={() => setTab('capture')}
-          className={`px-4 py-2 rounded ${tab === 'capture' ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
-        >
-          Запечатлённые ({captureMemories.length})
-        </button>
-        <button
-          onClick={() => setTab('regular')}
-          className={`px-4 py-2 rounded ${tab === 'regular' ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
-        >
-          Обычные фото ({regularMemories.length})
-        </button>
-      </div>
-
-      {tab === 'capture' && <MemoryGrid memories={captureMemories} showBadge />}
-      {tab === 'regular' && <MemoryGrid memories={regularMemories} />}
-
-      <button
-        onClick={() => setShowUpload(true)}
-        className="mt-6 w-full bg-emerald-500 text-white py-2 rounded-lg hover:bg-emerald-600"
-      >
-        + Добавить фото
-      </button>
-
-      {showUpload && (
-        <div className="mt-6">
-          <PhotoUpload
-            vacationId={vacationId}
-            captureType={tab === 'capture' ? 'ACTIVITY_MOMENT' : null}
-            activityId={activityId}
-            onUpload={() => {
-              setShowUpload(false);
-              window.location.reload();
-            }}
-            onCancel={() => setShowUpload(false)}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: CreateActivityModal.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/CreateActivityModal.js
-РАЗМЕР: 10519 символов
-================================================================================
-
-// src/components/vacation/CreateActivityModal.js
-'use client';
-
-import { useState } from 'react';
-
-export default function CreateActivityModal({ vacation, onClose, onCreate }) {
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    date: '',
-    type: 'ACTIVITY',
-    startTime: '',
-    endTime: '',
-    cost: '',
-    notes: '',
-    priority: 'MEDIUM',
-    status: 'PLANNED'
-  });
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim() || !formData.date) {
-      alert('Название и дата обязательны');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/activities', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          vacationId: vacation.id
-        }),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const newActivity = await response.json();
-        onCreate(newActivity);
-        onClose();
-      } else {
-        const error = await response.json();
-        alert(error.message || 'Ошибка создания активности');
-      }
-    } catch (error) {
-      console.error('Ошибка создания активности:', error);
-      alert('Ошибка сети');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const activityTypes = [
-    { value: 'FLIGHT', label: '✈️ Перелет', emoji: '✈️' },
-    { value: 'HOTEL', label: '🏨 Отель', emoji: '🏨' },
-    { value: 'RESTAURANT', label: '🍽️ Ресторан', emoji: '🍽️' },
-    { value: 'ATTRACTION', label: '🏛️ Достопримечательность', emoji: '🏛️' },
-    { value: 'TRANSPORTATION', label: '🚗 Транспорт', emoji: '🚗' },
-    { value: 'EVENT', label: '🎭 Мероприятие', emoji: '🎭' },
-    { value: 'ACTIVITY', label: '🎯 Активность', emoji: '🎯' },
-    { value: 'SHOPPING', label: '🛍️ Шоппинг', emoji: '🛍️' },
-    { value: 'BEACH', label: '🏖️ Пляж', emoji: '🏖️' },
-    { value: 'HIKING', label: '🥾 Поход', emoji: '🥾' },
-    { value: 'MUSEUM', label: '🖼️ Музей', emoji: '🖼️' },
-    { value: 'CONCERT', label: '🎵 Концерт', emoji: '🎵' },
-    { value: 'SPORTS', label: '⚽ Спорт', emoji: '⚽' }
-  ];
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Создать активность</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-            disabled={isLoading}
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Основная информация */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Название активности *
-              </label>
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                placeholder="Например: Экскурсия по старому городу"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Тип активности *
-              </label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                {activityTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.emoji} {type.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Дата и время */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Дата *
-              </label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Время начала
-              </label>
-              <input
-                type="time"
-                name="startTime"
-                value={formData.startTime}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Время окончания
-              </label>
-              <input
-                type="time"
-                name="endTime"
-                value={formData.endTime}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* Описание и заметки */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Описание
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Подробное описание активности..."
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Заметки
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Дополнительные заметки..."
-            />
-          </div>
-
-          {/* Стоимость и настройки */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Стоимость
-              </label>
-              <input
-                type="number"
-                name="cost"
-                value={formData.cost}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Приоритет
-              </label>
-              <select
-                name="priority"
-                value={formData.priority}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="LOW">🔴 Низкий</option>
-                <option value="MEDIUM">🟡 Средний</option>
-                <option value="HIGH">🟢 Высокий</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Статус
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              >
-                <option value="PLANNED">📅 Запланировано</option>
-                <option value="CONFIRMED">✅ Подтверждено</option>
-                <option value="IN_PROGRESS">🔄 В процессе</option>
-                <option value="COMPLETED">🏁 Завершено</option>
-                <option value="CANCELLED">❌ Отменено</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Кнопки действий */}
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="flex-1 px-6 py-3 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200 disabled:opacity-50"
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin"></div>
-                  <span>Создание...</span>
-                </>
-              ) : (
-                <span>Создать активность</span>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: DebugImages.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/DebugImages.js
-РАЗМЕР: 4835 символов
-================================================================================
-
-// src/components/vacation/DebugImages.js
-'use client';
-
-import { useState } from 'react';
-
-export default function DebugImages({ memories }) {
-  const [testResults, setTestResults] = useState([]);
-
-  const testImageUrls = async () => {
-    console.log('🧪 Начинаем тестирование URL изображений...');
-    
-    const results = await Promise.all(
-      memories.map(async (memory) => {
-        const getImageUrl = (imageUrl) => {
-          if (!imageUrl) return null;
-          if (imageUrl.startsWith('http')) return imageUrl;
-          if (!imageUrl.startsWith('/uploads/') && !imageUrl.startsWith('/')) {
-            return `/uploads/memories/${imageUrl}`;
-          }
-          return imageUrl;
-        };
-
-        const imageUrl = getImageUrl(memory.imageUrl);
-        const fullUrl = imageUrl?.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`;
-        
-        try {
-          const response = await fetch(fullUrl, { method: 'HEAD' });
-          return {
-            memoryId: memory.id,
-            originalUrl: memory.imageUrl,
-            resolvedUrl: imageUrl,
-            fullUrl: fullUrl,
-            exists: response.ok,
-            status: response.status,
-            size: response.headers.get('content-length')
-          };
-        } catch (error) {
-          return {
-            memoryId: memory.id,
-            originalUrl: memory.imageUrl,
-            resolvedUrl: imageUrl,
-            fullUrl: fullUrl,
-            exists: false,
-            error: error.message
-          };
-        }
-      })
-    );
-
-    setTestResults(results);
-    
-    // Логируем результаты
-    results.forEach(result => {
-      if (result.exists) {
-        console.log('✅', result);
-      } else {
-        console.log('❌', result);
-      }
-    });
-  };
-
-  return (
-    <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-yellow-800">🐛 Режим отладки изображений</h3>
-        <button
-          onClick={testImageUrls}
-          className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 text-sm"
-        >
-          Тестировать URL
-        </button>
-      </div>
-
-      <div className="space-y-2 max-h-64 overflow-y-auto">
-        {memories.map((memory) => {
-          const getImageUrl = (imageUrl) => {
-            if (!imageUrl) return '/placeholder-image.jpg';
-            if (imageUrl.startsWith('http')) return imageUrl;
-            if (!imageUrl.startsWith('/uploads/') && !imageUrl.startsWith('/')) {
-              return `/uploads/memories/${imageUrl}`;
-            }
-            return imageUrl;
-          };
-
-          const imageUrl = getImageUrl(memory.imageUrl);
-          const testResult = testResults.find(r => r.memoryId === memory.id);
-
-          return (
-            <div key={memory.id} className="flex items-center space-x-3 p-3 bg-white rounded border">
-              <img
-                src={imageUrl}
-                alt={memory.title}
-                className="w-12 h-12 object-cover rounded"
-                onError={(e) => {
-                  e.target.src = '/placeholder-image.jpg';
-                  e.target.classList.add('border-2', 'border-red-500');
-                }}
-                onLoad={(e) => {
-                  e.target.classList.add('border-2', 'border-green-500');
-                }}
-              />
-              
-              <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate">{memory.title}</div>
-                <div className="text-xs text-gray-600 truncate">ID: {memory.id}</div>
-                <div className="text-xs text-gray-500 truncate" title={memory.imageUrl}>
-                  {memory.imageUrl}
+                  {activity.startTime && (
+                    <>
+                      <span>•</span>
+                      <span>
+                        {activity.startTime.substring(0, 5)}
+                        {activity.endTime && ` - ${activity.endTime.substring(0, 5)}`}
+                      </span>
+                    </>
+                  )}
+                  {activity.location && (
+                    <>
+                      <span>•</span>
+                      <span className="text-gray-600">
+                        {activity.location.name}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
-
-              <div className="text-right">
-                {testResult ? (
-                  testResult.exists ? (
-                    <span className="text-green-600 text-sm">✅ Доступно</span>
-                  ) : (
-                    <span className="text-red-600 text-sm">❌ Ошибка</span>
-                  )
-                ) : (
-                  <span className="text-gray-500 text-sm">⏳ Не проверено</span>
-                )}
-              </div>
             </div>
-          );
-        })}
-      </div>
-
-      {testResults.length > 0 && (
-        <div className="mt-4 p-3 bg-blue-50 rounded">
-          <h4 className="font-semibold text-blue-800 mb-2">Результаты тестирования:</h4>
-          <div className="text-sm">
-            ✅ Доступно: {testResults.filter(r => r.exists).length} / {testResults.length}
-          </div>
-          <div className="text-sm">
-            ❌ Ошибки: {testResults.filter(r => !r.exists).length} / {testResults.length}
           </div>
         </div>
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 
 
 
 ================================================================================
-ФАЙЛ: InviteFriendsModal.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/InviteFriendsModal.js
-РАЗМЕР: 9532 символов
+ФАЙЛ: ActivityInfoTab.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ActivityInfoTab.js
+РАЗМЕР: 5980 символов
 ================================================================================
 
-// src/components/vacation/InviteFriendsModal.js (исправленная версия)
-'use client';
+import ParticipationButton from './ParticipationButton';
+import LocationCard from './LocationCard';
 
-import { useState, useEffect } from 'react';
-
-export default function InviteFriendsModal({ vacation, onClose, onInvite }) {
-  const [friends, setFriends] = useState([]);
-  const [selectedFriends, setSelectedFriends] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(true);
-  const [usertag, setUsertag] = useState('');
-  const [isInviting, setIsInviting] = useState(false);
-
-  useEffect(() => {
-    fetchFriends();
-  }, []);
-
-  const fetchFriends = async () => {
-    try {
-      const response = await fetch('/api/friends/list', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setFriends(data.friends);
-      } else {
-        console.error('Ошибка загрузки друзей:', response.status);
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки друзей:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const toggleFriendSelection = (friendId) => {
-    setSelectedFriends(prev => 
-      prev.includes(friendId) 
-        ? prev.filter(id => id !== friendId)
-        : [...prev, friendId]
-    );
-  };
-
-  const handleInviteSelected = async () => {
-    if (selectedFriends.length === 0) return;
-
-    setIsInviting(true);
-    try {
-      const results = [];
-      for (const friendId of selectedFriends) {
-        try {
-          const response = await fetch(`/api/vacations/${vacation.id}/invite-friend`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ friendId }),
-            credentials: 'include'
-          });
-          
-          const data = await response.json();
-          results.push({ 
-            friendId, 
-            success: response.ok,
-            message: data.message 
-          });
-        } catch (error) {
-          results.push({ 
-            friendId, 
-            success: false,
-            message: 'Ошибка сети' 
-          });
-        }
-      }
-
-      onInvite(results);
-      setSelectedFriends([]);
-    } catch (error) {
-      console.error('Ошибка отправки приглашений:', error);
-    } finally {
-      setIsInviting(false);
-    }
-  };
-
-  const handleInviteByUsertag = async () => {
-    if (!usertag.trim()) return;
-
-    setIsInviting(true);
-    try {
-      const response = await fetch(`/api/vacations/${vacation.id}/invite-by-usertag`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ usertag: usertag.trim() }),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        alert('✅ Приглашение отправлено!');
-        setUsertag('');
-        onInvite([{ success: true, message: 'Приглашение отправлено' }]);
-      } else {
-        alert(`❌ ${data.message || 'Ошибка отправки приглашения'}`);
-      }
-    } catch (error) {
-      console.error('Ошибка отправки приглашения:', error);
-      alert('❌ Ошибка сети');
-    } finally {
-      setIsInviting(false);
-    }
-  };
-
-  const filteredFriends = friends.filter(friend =>
-    friend.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    friend.usertag.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">Пригласить друзей</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
-            ×
-          </button>
-        </div>
-
-        {/* Приглашение по usertag */}
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-          <h3 className="text-lg font-semibold mb-3">Пригласить по usertag</h3>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={usertag}
-              onChange={(e) => setUsertag(e.target.value)}
-              placeholder="Введите usertag пользователя"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              disabled={isInviting}
-            />
-            <button
-              onClick={handleInviteByUsertag}
-              disabled={!usertag.trim() || isInviting}
-              className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-            >
-              {isInviting ? 'Отправка...' : 'Пригласить'}
-            </button>
-          </div>
-          <p className="text-sm text-gray-600 mt-2">
-            Введите usertag пользователя (например: ivan_petrov)
-          </p>
-        </div>
-
-        {/* Список друзей */}
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold mb-3">Выберите из друзей</h3>
-          
-          <input
-            type="text"
-            placeholder="Поиск друзей..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
-              <p className="text-gray-600 mt-2">Загрузка друзей...</p>
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredFriends.map(friend => (
-                <div
-                  key={friend.id}
-                  className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
-                    selectedFriends.includes(friend.id)
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : 'border-gray-200 hover:border-emerald-300'
-                  }`}
-                  onClick={() => toggleFriendSelection(friend.id)}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
-                      {friend.avatar ? (
-                        <img
-                          src={friend.avatar}
-                          alt={friend.name}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        friend.name.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{friend.name}</div>
-                      <div className="text-sm text-gray-500">@{friend.usertag}</div>
-                    </div>
-                  </div>
-                  
-                  <div className={`w-5 h-5 border-2 rounded flex items-center justify-center ${
-                    selectedFriends.includes(friend.id)
-                      ? 'bg-emerald-500 border-emerald-500'
-                      : 'border-gray-300'
-                  }`}>
-                    {selectedFriends.includes(friend.id) && (
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {filteredFriends.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  {searchTerm ? 'Друзья не найдены' : 'У вас пока нет друзей'}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Кнопки действий */}
-        <div className="flex justify-between items-center pt-4 border-t">
-          <div className="text-sm text-gray-600">
-            Выбрано: {selectedFriends.length}
-          </div>
-          <div className="flex space-x-3">
-            <button
-              onClick={onClose}
-              disabled={isInviting}
-              className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50"
-            >
-              Отмена
-            </button>
-            <button
-              onClick={handleInviteSelected}
-              disabled={selectedFriends.length === 0 || isInviting}
-              className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-            >
-              {isInviting && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              )}
-              <span>
-                {isInviting ? 'Отправка...' : `Пригласить (${selectedFriends.length})`}
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: MemoriesSection.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/MemoriesSection.js
-РАЗМЕР: 4057 символов
-================================================================================
-
-// src/components/vacation/MemoriesSection.js
-'use client';
-
-import { useState, useEffect } from 'react';
-import PhotoUpload from './PhotoUpload.js';
-
-export default function MemoriesSection({ vacation, preview = false }) {
-  const [memories, setMemories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showUpload, setShowUpload] = useState(false);
-
-  useEffect(() => {
-    fetchMemories();
-  }, [vacation.id]);
-
-  const fetchMemories = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/vacations/${vacation.id}/memories`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setMemories(data);
-      }
-    } catch (error) {
-      console.error('Ошибка:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleMemoryUpload = (newMemories) => {
-    setMemories(prev => [...newMemories, ...prev]);
-    setShowUpload(false);
-    setTimeout(() => {
-      fetchMemories();
-    }, 1000);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Воспоминания</h2>
-          <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="aspect-square bg-gray-200 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const displayedMemories = preview ? memories.slice(0, 6) : memories;
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">
-          Воспоминания {!preview && `(${memories.length})`}
-        </h2>
-        <button 
-          onClick={() => setShowUpload(true)}
-          className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 text-sm font-medium flex items-center space-x-2"
-        >
-          <span>+</span>
-          <span>Добавить фото</span>
-        </button>
-      </div>
-
-      {memories.length === 0 ? (
-        <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">Camera</span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Пока нет воспоминаний
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Добавьте первые фотографии вашего отпуска
-          </p>
-          <button
-            onClick={() => setShowUpload(true)}
-            className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 font-medium"
-          >
-            + Добавить фото
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {displayedMemories.map((memory) => (
-            <div
-              key={memory.id}
-              className="aspect-square rounded-lg overflow-hidden group cursor-pointer relative bg-gray-100"
-            >
-              <img
-                src={memory.imageUrl}
-                alt={memory.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {showUpload && (
-        <div className="mt-6">
-          <PhotoUpload 
-            vacationId={vacation.id}
-            onUpload={handleMemoryUpload}
-            onCancel={() => setShowUpload(false)}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: MemoryGrid.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/MemoryGrid.js
-РАЗМЕР: 3948 символов
-================================================================================
-
-// src/components/vacation/MemoryGrid.js
-'use client';
-
-import { useState } from 'react';
-
-export default function MemoryGrid({ memories = [], showBadge = false }) {
-  const [imageErrors, setImageErrors] = useState({});
-
-  // Защита от undefined или null
-  if (!memories || !Array.isArray(memories)) {
-    console.warn('⚠️ MemoryGrid: memories не является массивом:', memories);
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl">❓</span>
-        </div>
-        <p>Нет данных для отображения</p>
-      </div>
-    );
-  }
-
-  // Фильтруем некорректные элементы
-  const validMemories = memories.filter(memory => 
-    memory && 
-    typeof memory === 'object' && 
-    memory.id && 
-    memory.imageUrl
-  );
-
-  if (validMemories.length === 0) {
-    return (
-      <div className="text-center py-12">
-        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl">📸</span>
-        </div>
-        <p className="text-gray-600">Пока нет фотографий</p>
-      </div>
-    );
-  }
-
-  const getImageUrl = (imageUrl) => {
-    if (!imageUrl) {
-      console.warn('⚠️ MemoryGrid: imageUrl отсутствует');
-      return '/placeholder-image.jpg';
-    }
-    
-    if (imageUrl.startsWith('http')) return imageUrl;
-    
-    if (!imageUrl.startsWith('/uploads/') && !imageUrl.startsWith('/')) {
-      const correctedUrl = `/uploads/memories/${imageUrl}`;
-      console.log('🔄 MemoryGrid: исправлен URL:', { original: imageUrl, corrected: correctedUrl });
-      return correctedUrl;
-    }
-    
-    return imageUrl;
-  };
-
-  const handleImageError = (memoryId, imageUrl) => {
-    console.error('❌ MemoryGrid: ошибка загрузки изображения:', { memoryId, imageUrl });
-    setImageErrors(prev => ({ ...prev, [memoryId]: true }));
-  };
-
-  const handleImageLoad = (memoryId, imageUrl) => {
-    console.log('✅ MemoryGrid: изображение загружено:', { memoryId, imageUrl });
-    setImageErrors(prev => ({ ...prev, [memoryId]: false }));
-  };
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {validMemories.map((memory) => {
-        const imageUrl = getImageUrl(memory.imageUrl);
-        const hasError = imageErrors[memory.id];
-        
-        return (
-          <div
-            key={memory.id}
-            className="aspect-square rounded-lg overflow-hidden group cursor-pointer relative bg-gray-100 border border-gray-200"
-          >
-            {!hasError ? (
-              <img
-                src={imageUrl}
-                alt={memory.title || 'Фото из отпуска'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                onError={() => handleImageError(memory.id, imageUrl)}
-                onLoad={() => handleImageLoad(memory.id, imageUrl)}
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                <div className="text-center text-gray-500">
-                  <div className="text-2xl mb-2">📷</div>
-                  <div className="text-xs">Не удалось загрузить</div>
-                </div>
-              </div>
-            )}
-            
-            {/* Бейдж для capture-фото */}
-            {showBadge && memory.captureType && !hasError && (
-              <div className="absolute top-2 right-2 bg-yellow-500 text-white text-xs px-2 py-1 rounded-full shadow-md">
-                ⭐
-              </div>
-            )}
-            
-            {/* Overlay при наведении */}
-            {!hasError && (
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300" />
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: MemoryUploadModal.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/MemoryUploadModal.js
-РАЗМЕР: 1084 символов
-================================================================================
-
-// src/components/vacation/MemoryUploadModal.js
-'use client';
-
-import PhotoUpload from './PhotoUpload.js';
-
-export default function MemoryUploadModal({ vacationId, onClose, onUpload }) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Загрузить воспоминание</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <PhotoUpload
-          vacationId={vacationId}
-          onUpload={(memories) => {
-            onUpload(memories);
-            onClose();
-          }}
-          onCancel={onClose}
-        />
-      </div>
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: PhotoUpload.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/PhotoUpload.js
-РАЗМЕР: 8297 символов
-================================================================================
-
-// src/components/vacation/PhotoUpload.js
-'use client';
-
-import { useState, useRef } from 'react';
-
-export default function PhotoUpload({
-  vacationId,
-  captureType,
-  activityId,
-  onUpload,
-  onCancel,
+export default function ActivityInfoTab({ 
+  activity, 
+  userParticipation, 
+  onParticipation, 
+  isParticipationLoading 
 }) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState([]);
-  const [previewUrls, setPreviewUrls] = useState([]);
-  const fileInputRef = useRef(null);
-
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    
-    // Проверка количества файлов
-    if (files.length > 10) {
-      alert('Можно загрузить не более 10 фотографий за раз');
-      return;
-    }
-
-    // Проверка типа и размера файлов
-    const validFiles = files.filter(f => {
-      const isImage = f.type.startsWith('image/');
-      const isSizeValid = f.size <= 10 * 1024 * 1024; // 10MB
-      return isImage && isSizeValid;
-    });
-
-    if (validFiles.length !== files.length) {
-      alert('Некоторые файлы не являются изображениями или превышают размер 10 МБ');
-    }
-
-    setSelectedFiles(validFiles);
-    
-    // Создаем preview URLs
-    const newPreviewUrls = validFiles.map(f => URL.createObjectURL(f));
-    setPreviewUrls(newPreviewUrls);
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFiles.length) return;
-
-    setIsUploading(true);
-    
-    const formData = new FormData();
-    formData.append('vacationId', vacationId);
-    
-    // Добавляем параметры типа загрузки
-    if (captureType) {
-      formData.append('captureType', captureType);
-    }
-    if (activityId) {
-      formData.append('activityId', activityId);
-    }
-    
-    // Добавляем файлы
-    selectedFiles.forEach(f => formData.append('photos', f));
-
-    try {
-      const response = await fetch('/api/memories/upload', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert(`Успешно загружено ${data.memories.length} фото!`);
-        onUpload?.(data.memories);
-      } else {
-        alert(data.message || 'Ошибка загрузки');
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки:', error);
-      alert('Ошибка сети при загрузке');
-    } finally {
-      setIsUploading(false);
-      clearAll();
-    }
-  };
-
-  const removeFile = (index) => {
-    // Освобождаем URL preview
-    URL.revokeObjectURL(previewUrls[index]);
-    
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setPreviewUrls(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const clearAll = () => {
-    // Освобождаем все preview URLs
-    previewUrls.forEach(url => URL.revokeObjectURL(url));
-    
-    setSelectedFiles([]);
-    setPreviewUrls([]);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const getUploadTitle = () => {
-    if (captureType === 'DAILY_MOMENT') return 'Запечатлеть момент дня';
-    if (captureType === 'ACTIVITY_MOMENT') return 'Запечатлеть момент активности';
-    if (activityId) return 'Добавить фото к активности';
-    return 'Добавить фото в галерею';
-  };
-
-  const getUploadDescription = () => {
-    if (captureType) {
-      return 'Яркие моменты имеют ограничения по количеству для сохранения ценности каждого кадра';
-    }
-    return 'Обычные фото можно загружать без ограничений по количеству';
-  };
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-emerald-200">
-      <div className="flex justify-between items-center mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            {getUploadTitle()}
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            {getUploadDescription()}
-          </p>
-        </div>
-        <button
-          onClick={onCancel}
-          disabled={isUploading}
-          className="text-gray-500 hover:text-gray-700 p-1 transition-colors"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Область загрузки */}
-      <div
-        className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-emerald-400 cursor-pointer bg-gray-50 transition-colors"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileSelect}
-          className="hidden"
-          disabled={isUploading}
-        />
-        
-        <div className="text-4xl mb-4 text-gray-400">📸</div>
-        <div className="text-lg font-semibold text-gray-700 mb-2">
-          Выберите фотографии
-        </div>
-        <div className="text-sm text-gray-500 mb-1">
-          Перетащите файлы или нажмите для выбора
-        </div>
-        <div className="text-xs text-gray-400">
-          Максимум 10 файлов, до 10 МБ каждый
-        </div>
-      </div>
-
-      {/* Preview выбранных файлов */}
-      {previewUrls.length > 0 && (
-        <div className="mt-6 space-y-4">
-          <div className="flex justify-between items-center">
-            <h4 className="font-semibold text-gray-700">
-              Выбрано файлов: {selectedFiles.length}
-            </h4>
-            <button
-              onClick={clearAll}
-              disabled={isUploading}
-              className="text-red-500 hover:text-red-700 text-sm disabled:opacity-50 transition-colors"
-            >
-              Очистить все
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto p-2">
-            {previewUrls.map((url, index) => (
-              <div key={index} className="relative group">
-                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
-                  <img 
-                    src={url} 
-                    alt={`Preview ${index}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="truncate">{selectedFiles[index].name}</div>
-                  <div>{(selectedFiles[index].size / 1024 / 1024).toFixed(1)} MB</div>
-                </div>
-                <button
-                  onClick={() => removeFile(index)}
-                  disabled={isUploading}
-                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-
-          {/* Кнопки действий */}
-          <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-            <div className="text-sm text-gray-600">
-              {selectedFiles.length} файлов для загрузки
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={onCancel}
-                disabled={isUploading}
-                className="px-6 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 disabled:opacity-50 transition-colors"
-              >
-                Отмена
-              </button>
-              <button
-                onClick={handleUpload}
-                disabled={isUploading || selectedFiles.length === 0}
-                className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors"
-              >
-                {isUploading ? (
-                  <>
-                    <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin"></div>
-                    <span>Загрузка...</span>
-                  </>
-                ) : (
-                  <span>Загрузить</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: PlanSection.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/PlanSection.js
-РАЗМЕР: 4961 символов
-================================================================================
-
-// src/components/vacation/PlanSection.js
-'use client';
-
-import { useState, useEffect } from 'react';
-import ActivityCard from './ActivityCard';
-import CreateActivityModal from './CreateActivityModal';
-
-export default function PlanSection({ vacation, preview = false }) {
-  const [activities, setActivities] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-
-  useEffect(() => {
-    fetchActivities();
-  }, [vacation.id]);
-
-  const fetchActivities = async () => {
-    try {
-      const response = await fetch(`/api/vacations/${vacation.id}/activities`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setActivities(data);
-      }
-    } catch (error) {
-      console.error('Ошибка:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleActivityCreated = (newActivity) => {
-    setActivities(prev => [newActivity, ...prev]);
-  };
-
-  const displayedActivities = preview ? activities.slice(0, 3) : activities;
-
-  // Группируем активности по датам
-  const activitiesByDate = displayedActivities.reduce((acc, activity) => {
-    const dateKey = new Date(activity.date).toISOString().split('T')[0];
-    if (!acc[dateKey]) {
-      acc[dateKey] = [];
-    }
-    acc[dateKey].push(activity);
-    return acc;
-  }, {});
-
-  // Сортируем даты
-  const sortedDates = Object.keys(activitiesByDate).sort();
-
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Планы</h2>
-          <div className="w-24 h-8 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-20 bg-gray-200 rounded-lg animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-gray-900">
-          Планы {!preview && `(${activities.length})`}
-        </h2>
-        
-        {!preview && (
-          <button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 text-sm font-medium flex items-center space-x-2"
-          >
-            <span>+</span>
-            <span>Создать активность</span>
-          </button>
-        )}
-      </div>
-
-      {activities.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">📅</span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Пока нет активностей
-          </h3>
-          <p className="text-gray-600 mb-6">
-            Создайте первую активность для вашего отпуска
-          </p>
-          {!preview && (
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 font-medium"
-            >
-              + Создать активность
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {sortedDates.map(date => (
-            <div key={date} className="space-y-3">
-              <h3 className="font-semibold text-lg text-gray-900 border-b pb-2">
-                {new Date(date).toLocaleDateString('ru-RU', { 
-                  weekday: 'long', 
-                  day: 'numeric', 
-                  month: 'long',
-                  year: 'numeric'
-                })}
-              </h3>
-              <div className="space-y-3">
-                {activitiesByDate[date].map((activity) => (
-                  <ActivityCard 
-                    key={activity.id} 
-                    activity={activity} 
-                    vacationId={vacation.id}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {preview && activities.length > 3 && (
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <button 
-            onClick={() => window.location.href = `/vacations/${vacation.id}?tab=plans`}
-            className="w-full text-center text-emerald-600 hover:text-emerald-700 font-medium py-2"
-          >
-            Показать все {activities.length} активностей →
-          </button>
-        </div>
-      )}
-
-      {showCreateModal && (
-        <CreateActivityModal
-          vacation={vacation}
-          onClose={() => setShowCreateModal(false)}
-          onCreate={handleActivityCreated}
-        />
-      )}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: PlansTab.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/PlansTab.js
-РАЗМЕР: 2384 символов
-================================================================================
-
-// src/components/vacation/PlansTab.js
-'use client';
-
-import { useState, useEffect } from 'react';
-import VacationCalendar from './VacationCalendar';
-import Link from 'next/link';
-
-export default function PlansTab({ vacationId }) {
-  const [view, setView] = useState('list');
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch(`/api/vacations/${vacationId}/activities`, { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => {
-        setActivities(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [vacationId]);
-
-  if (loading) {
-    return <div className="bg-white rounded-2xl shadow-lg p-6 animate-pulse">Загрузка…</div>;
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Планы</h2>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => setView('list')}
-            className={`px-3 py-1 rounded ${view === 'list' ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
-          >
-            Список
-          </button>
-          <button
-            onClick={() => setView('calendar')}
-            className={`px-3 py-1 rounded ${view === 'calendar' ? 'bg-emerald-500 text-white' : 'bg-gray-200'}`}
-          >
-            Календарь
-          </button>
-        </div>
-      </div>
-
-      {view === 'list' ? (
-        <div className="space-y-3">
-          {activities.length === 0 ? (
-            <p className="text-center text-gray-600 py-8">Планов пока нет</p>
-          ) : (
-            activities.map(act => (
-              <Link
-                key={act.id}
-                href={`/vacation/${vacationId}/activity/${act.id}`}
-                className="block p-4 border rounded-lg hover:border-emerald-400 transition"
-              >
-                <div className="font-medium">{act.title}</div>
-                <div className="text-sm text-gray-600">
-                  {new Date(act.date).toLocaleDateString('ru-RU')}
-                  {act.location && ` – ${act.location.name}`}
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
-      ) : (
-        <VacationCalendar vacation={vacationId} activities={activities} />
-      )}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: SmartCapture.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/SmartCapture.js
-РАЗМЕР: 4955 символов
-================================================================================
-
-// src/components/vacation/SmartCapture.js
-'use client';
-
-import { useState, useEffect } from 'react';
-import PhotoUpload from './PhotoUpload';
-
-export default function SmartCapture({ vacation }) {
-  const [limits, setLimits] = useState(null);
-  const [showUpload, setShowUpload] = useState(false);
-  const [uploadConfig, setUploadConfig] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchLimits();
-  }, [vacation.id]);
-
-  const fetchLimits = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/memories/capture-limits?vacationId=${vacation.id}`, {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setLimits(data);
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки лимитов:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const openUpload = (captureType, activityId = null) => {
-    setUploadConfig({ captureType, activityId });
-    setShowUpload(true);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-200 rounded"></div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (!limits) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="text-center text-gray-500">
-          Не удалось загрузить информацию о лимитах
-        </div>
-      </div>
-    );
-  }
-
-  const { daily, activities } = limits;
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold mb-4">Запечатлеть яркий момент</h3>
-      
-      {/* Дневной слот */}
-      <CaptureSlot
-        title="Момент дня"
-        description="3 ярких фото в день"
-        used={daily.used}
-        total={daily.total}
-        remaining={daily.remaining}
-        onClick={() => openUpload('DAILY_MOMENT')}
-        type="daily"
-      />
-
-      {/* Слоты по активностям */}
-      {activities.map(activity => (
-        <CaptureSlot
-          key={activity.activityId}
-          title={activity.title}
-          description="3 ярких фото на активность"
-          used={activity.used}
-          total={activity.total}
-          remaining={activity.remaining}
-          onClick={() => openUpload('ACTIVITY_MOMENT', activity.activityId)}
-          type="activity"
-        />
-      ))}
-
-      {activities.length === 0 && (
-        <div className="text-center py-4 text-gray-500 text-sm">
-          На сегодня нет активностей для запечатления моментов
-        </div>
-      )}
-
-      {showUpload && (
-        <div className="mt-6">
-          <PhotoUpload
-            vacationId={vacation.id}
-            captureType={uploadConfig.captureType}
-            activityId={uploadConfig.activityId}
-            onUpload={() => {
-              setShowUpload(false);
-              fetchLimits(); // Обновляем лимиты
-            }}
-            onCancel={() => setShowUpload(false)}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function CaptureSlot({ title, description, used, total, remaining, onClick, type }) {
-  const disabled = remaining === 0;
-  const percentage = (used / total) * 100;
-
-  return (
-    <div className={`flex items-center justify-between p-4 border rounded-lg mb-3 transition-all ${
-      disabled ? 'bg-gray-50 border-gray-200' : 'bg-white border-gray-200 hover:border-emerald-300 cursor-pointer'
-    }`}>
-      <div className="flex-1">
-        <div className="flex items-center space-x-3">
-          <div className={`w-3 h-3 rounded-full ${
-            type === 'daily' ? 'bg-blue-500' : 'bg-green-500'
-          }`}></div>
-          <div>
-            <div className="font-medium text-gray-900">{title}</div>
-            <div className="text-sm text-gray-600">{description}</div>
-            <div className="flex items-center space-x-2 mt-1">
-              <div className="w-24 bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${
-                    disabled ? 'bg-red-500' : 'bg-emerald-500'
-                  }`}
-                  style={{ width: `${percentage}%` }}
-                ></div>
-              </div>
-              <span className="text-xs text-gray-500">
-                {used}/{total}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-          disabled 
-            ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-            : 'bg-emerald-500 text-white hover:bg-emerald-600'
-        }`}
-      >
-        {disabled ? 'Лимит' : `+${remaining}`}
-      </button>
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: SmartGallery.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/SmartGallery.js
-РАЗМЕР: 6952 символов
-================================================================================
-
-// src/components/vacation/SmartGallery.js
-'use client';
-
-import { useState, useEffect } from 'react';
-import MemoryGrid from './MemoryGrid';
-
-export default function SmartGallery({ vacationId }) {
-  const [view, setView] = useState('all');
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    fetchGallery();
-  }, [vacationId, view]);
-
-  const fetchGallery = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      console.log('🔄 Загрузка галереи:', { vacationId, view });
-      
-      const response = await fetch(`/api/vacations/${vacationId}/gallery?view=${view}`, {
-        credentials: 'include',
-        cache: 'no-store'
-      });
-      
-      console.log('📡 Ответ галереи:', response.status);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-      
-      const result = await response.json();
-      console.log('✅ Данные галереи получены:', result);
-      
-      // Валидация данных
-      if (!result || typeof result !== 'object') {
-        throw new Error('Некорректный формат данных');
-      }
-      
-      setData(result);
-    } catch (error) {
-      console.error('❌ Ошибка загрузки галереи:', error);
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getViewTitle = () => {
-    switch (view) {
-      case 'all': return 'Все фотографии';
-      case 'capture': return 'Яркие моменты';
-      case 'activities': return 'По активностям';
-      default: return 'Галерея';
-    }
-  };
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="text-center text-red-600 py-8">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">⚠️</span>
-          </div>
-          <h3 className="text-lg font-semibold mb-2">Ошибка загрузки галереи</h3>
-          <p className="text-sm mb-4">{error}</p>
-          <button 
-            onClick={fetchGallery}
-            className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200"
-          >
-            Попробовать снова
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="aspect-square bg-gray-200 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!data) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="text-center text-gray-500 py-8">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">📸</span>
-          </div>
-          <p>Не удалось загрузить галерею</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
-          {getViewTitle()} ({data.total || 0})
-        </h2>
-        
-        <div className="flex space-x-2 bg-gray-100 p-1 rounded-lg">
-          {[
-            { id: 'all', label: 'Все', icon: '🖼️' },
-            { id: 'capture', label: 'Яркие', icon: '⭐' },
-            { id: 'activities', label: 'По активностям', icon: '📅' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setView(tab.id)}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center space-x-2 ${
-                view === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <span>{tab.icon}</span>
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Все фотографии */}
-      {view === 'all' && data.memories?.byDay && (
-        <div className="space-y-8">
-          {Object.entries(data.memories.byDay).map(([date, dayMemories]) => (
-            <div key={date} className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-900 border-b pb-2">
-                {new Date(date).toLocaleDateString('ru-RU', { 
-                  weekday: 'long', 
-                  day: 'numeric', 
-                  month: 'long',
-                  year: 'numeric'
-                })}
-              </h3>
-              <MemoryGrid 
-                memories={Array.isArray(dayMemories) ? dayMemories : []} 
-                showBadge={true} 
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Яркие моменты */}
-      {view === 'capture' && data.memories?.memories && (
-        <MemoryGrid 
-          memories={Array.isArray(data.memories.memories) ? data.memories.memories : []} 
-          showBadge={true} 
-        />
-      )}
-
-      {/* По активностям */}
-      {view === 'activities' && data.memories?.byActivity && (
-        <div className="space-y-8">
-          {Object.entries(data.memories.byActivity).map(([activityId, activityData]) => (
-            <div key={activityId} className="space-y-4">
-              <h3 className="font-semibold text-lg text-gray-900 border-b pb-2">
-                {activityData?.title || 'Без названия'} ({(activityData?.memories && Array.isArray(activityData.memories)) ? activityData.memories.length : 0})
-              </h3>
-              <MemoryGrid 
-                memories={Array.isArray(activityData?.memories) ? activityData.memories : []} 
-                showBadge={false} 
-              />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {(!data.total || data.total === 0) && (
-        <div className="text-center py-12">
-          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-3xl">📸</span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Пока нет фотографий
-          </h3>
-          <p className="text-gray-600 max-w-md mx-auto">
-            {view === 'all' && 'Начните добавлять фотографии в ваш отпуск'}
-            {view === 'capture' && 'Запечатлейте первые яркие моменты вашего отпуска'}
-            {view === 'activities' && 'Добавьте фотографии к активностям'}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: VacationCalendar.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/VacationCalendar.js
-РАЗМЕР: 2078 символов
-================================================================================
-
-// src/components/vacation/VacationCalendar.js
-'use client';
-
-import { useState } from 'react';
-
-export default function VacationCalendar({ vacation, activities = [] }) {
-  const start = new Date(vacation.startDate);
-  const end = new Date(vacation.endDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const days = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    days.push(new Date(d));
-  }
-
-  const getActivityCount = (date) => {
-    return activities.filter(a => {
-      const actDate = new Date(a.date);
-      actDate.setHours(0, 0, 0, 0);
-      return actDate.getTime() === date.getTime();
-    }).length;
-  };
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold mb-4">Календарь отпуска</h3>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs">
-        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-          <div key={day} className="font-medium text-gray-600 py-2">{day}</div>
-        ))}
-        {days.map((day, i) => {
-          const count = getActivityCount(day);
-          const isToday = day.getTime() === today.getTime();
-          const isPast = day < today;
-          const isFuture = day > today;
-
-          return (
-            <div
-              key={i}
-              className={`aspect-square flex flex-col items-center justify-center rounded-lg border ${
-                isToday
-                  ? 'border-emerald-500 bg-emerald-50'
-                  : isPast
-                  ? 'border-gray-200 bg-gray-50'
-                  : 'border-gray-200'
-              }`}
-            >
-              <span className={`text-sm ${isToday ? 'font-bold text-emerald-600' : ''}`}>
-                {day.getDate()}
-              </span>
-              {count > 0 && (
-                <span className="text-xs bg-emerald-500 text-white rounded-full w-5 h-5 flex items-center justify-center mt-1">
-                  {count}
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: VacationManagement.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/VacationManagement.js
-РАЗМЕР: 20697 символов
-================================================================================
-
-// components/vacation/VacationManagement.js
-'use client';
-
-import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import InviteFriendsModal from './InviteFriendsModal';
-
-export default function VacationManagement({ vacation, onUpdate }) {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const isOwner = vacation.userId === user?.id;
-
-  const handleDeleteVacation = async () => {
-    if (!confirm('Вы уверены, что хотите удалить этот отпуск? Все данные (планы, воспоминания, участники) будут безвозвратно удалены. Это действие нельзя отменить.')) {
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      const response = await fetch(`/api/vacations/${vacation.id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        alert(`Отпуск "${result.deletedVacation?.title || vacation.title}" успешно удален`);
-        router.push('/my-vacations');
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Ошибка при удалении отпуска');
-      }
-    } catch (error) {
-      console.error('Ошибка удаления отпуска:', error);
-      alert('Ошибка сети при удалении отпуска');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleEditVacation = async (formData) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/vacations/${vacation.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        await onUpdate();
-        setShowEditModal(false);
-        alert('Отпуск успешно обновлен!');
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Ошибка при обновлении отпуска');
-      }
-    } catch (error) {
-      console.error('Ошибка обновления отпуска:', error);
-      alert('Ошибка сети при обновлении отпуска');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRemoveMember = async (memberId, memberName) => {
-    if (!confirm(`Вы уверены, что хотите удалить ${memberName} из отпуска?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/vacations/${vacation.id}/members/${memberId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        await onUpdate();
-        alert(`${result.removedUser?.name || memberName} удален из отпуска`);
-      } else {
-        const errorData = await response.json();
-        alert(errorData.message || 'Ошибка при удалении участника');
-      }
-    } catch (error) {
-      console.error('Ошибка удаления участника:', error);
-      alert('Ошибка сети');
-    }
-  };
-
-  if (!isOwner) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="text-center py-8">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl">👑</span>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Только для владельца</h3>
-          <p className="text-gray-600 max-w-md mx-auto">
-            Функции управления доступны только создателю отпуска. 
-            Если вам нужны права управления, попросите владельца добавить вас как соорганизатора.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const totalMembers = vacation.members?.length || 1;
-  const acceptedMembers = vacation.members?.filter(m => m.status === 'ACCEPTED').length || 1;
-  const pendingMembers = vacation.members?.filter(m => m.status === 'PENDING').length || 0;
+  const goingParticipants = activity?.participants?.filter(p => p.status === 'GOING') || [];
 
   return (
     <div className="space-y-6">
-      {/* Статистика и быстрые действия */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <div className="text-2xl font-bold text-gray-900">{acceptedMembers}</div>
-          <div className="text-sm text-gray-600">Участников</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <div className="text-2xl font-bold text-gray-900">{vacation._count?.activities || 0}</div>
-          <div className="text-sm text-gray-600">Планов</div>
-        </div>
-        <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
-          <div className="text-2xl font-bold text-gray-900">{vacation._count?.memories || 0}</div>
-          <div className="text-sm text-gray-600">Воспоминаний</div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Приглашение друзей */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <span className="text-xl">👥</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Участники</h3>
-              <p className="text-sm text-gray-600">
-                {acceptedMembers} участник{acceptedMembers === 1 ? '' : 'а'}
-                {pendingMembers > 0 && `, ${pendingMembers} ожидает`}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="w-full bg-emerald-500 text-white py-3 rounded-lg hover:bg-emerald-600 transition duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
-          >
-            Пригласить друзей
-          </button>
-        </div>
-
-        {/* Редактирование отпуска */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <span className="text-xl">✏️</span>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Редактировать</h3>
-              <p className="text-sm text-gray-600">Даты, название, описание</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowEditModal(true)}
-            className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
-          >
-            Изменить отпуск
-          </button>
-        </div>
-      </div>
-
-      {/* Список участников */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Все участники</h3>
-          <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-            {totalMembers} всего
-          </span>
-        </div>
-        
-        {vacation.members?.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-2xl">👤</span>
-            </div>
-            <p className="text-gray-600">Пока нет других участников</p>
-            <p className="text-sm text-gray-500 mt-1">Пригласите друзей присоединиться к отпуску</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Участие в активности
+            </h3>
+            <p className="text-gray-600">
+              {goingParticipants.length > 0 
+                ? `${goingParticipants.length} человек участвуют` 
+                : 'Пока никто не участвует'
+              }
+            </p>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {/* Владелец */}
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-blue-50">
-              <div className="flex items-center space-x-3 flex-1 min-w-0">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
-                  {vacation.user.avatar ? (
-                    <img
-                      src={vacation.user.avatar}
-                      alt={vacation.user.name}
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  ) : (
-                    vacation.user.name.charAt(0).toUpperCase()
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-gray-900 truncate">
-                    {vacation.user.name}
-                    <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                      Владелец
-                    </span>
-                  </div>
-                  <div className="text-sm text-gray-500 truncate">@{vacation.user.usertag}</div>
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center space-x-3">
+            <ParticipationButton
+              userParticipation={userParticipation}
+              onParticipation={onParticipation}
+              isLoading={isParticipationLoading}
+              showLabel={true}
+            />
+          </div>
+        </div>
 
-            {/* Остальные участники */}
-            {vacation.members?.map((member) => (
-              member.userId !== vacation.userId && (
-                <div key={member.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
-                  <div className="flex items-center space-x-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0">
-                      {member.user.avatar ? (
-                        <img
-                          src={member.user.avatar}
-                          alt={member.user.name}
-                          className="w-full h-full rounded-full object-cover"
-                        />
-                      ) : (
-                        member.user.name.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900 truncate">
-                        {member.user.name}
-                        {member.role === 'CO_ORGANIZER' && (
-                          <span className="ml-2 text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
-                            Организатор
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-sm text-gray-500 truncate">@{member.user.usertag}</div>
-                    </div>
+        {goingParticipants.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Участвуют:</span>
+              <div className="flex -space-x-2">
+                {goingParticipants.slice(0, 5).map((participant) => (
+                  <div 
+                    key={participant.user.id}
+                    className="w-8 h-8 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-medium"
+                    title={participant.user.name}
+                  >
+                    {participant.user.avatar ? (
+                      <img
+                        src={participant.user.avatar}
+                        alt={participant.user.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      participant.user.name.charAt(0).toUpperCase()
+                    )}
                   </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <div className={`text-sm px-3 py-1 rounded-full ${
-                      member.status === 'ACCEPTED' 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {member.status === 'ACCEPTED' ? 'Участник' : 'Ожидает'}
-                    </div>
-                    
-                    <button
-                      onClick={() => handleRemoveMember(member.id, member.user.name)}
-                      className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
-                      title="Удалить участника"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              )
-            ))}
+                ))}
+              </div>
+              {goingParticipants.length > 5 && (
+                <span className="text-xs text-gray-400">
+                  +{goingParticipants.length - 5}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* Опасная зона */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 border border-red-200">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-            <span className="text-xl">⚠️</span>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-red-700">Опасная зона</h3>
-            <p className="text-sm text-gray-600">
-              Удаление отпуска нельзя отменить. Все данные будут безвозвратно удалены.
-            </p>
-          </div>
-        </div>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-          <p className="text-sm text-red-700">
-            <strong>Будет удалено:</strong> все планы, воспоминания, фотографии, участники и настройки отпуска.
-          </p>
-        </div>
-        <button
-          onClick={handleDeleteVacation}
-          disabled={isDeleting}
-          className="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed font-semibold w-full flex items-center justify-center space-x-2"
-        >
-          {isDeleting ? (
-            <>
-              <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin"></div>
-              <span>Удаление...</span>
-            </>
-          ) : (
-            <>
-              <span>🗑️</span>
-              <span>Удалить отпуск</span>
-            </>
-          )}
-        </button>
-      </div>
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Основная информация</h3>
+            
+            {activity.description && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Описание</h4>
+                <p className="text-gray-600">{activity.description}</p>
+              </div>
+            )}
 
-      {/* Модальные окна */}
-      {showInviteModal && (
-        <InviteFriendsModal
-          vacation={vacation}
-          onClose={() => setShowInviteModal(false)}
-          onInvite={onUpdate}
-        />
-      )}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Статус</h4>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  activity.status === 'PLANNED' ? 'bg-blue-100 text-blue-800' :
+                  activity.status === 'CONFIRMED' ? 'bg-green-100 text-green-800' :
+                  activity.status === 'IN_PROGRESS' ? 'bg-yellow-100 text-yellow-800' :
+                  activity.status === 'COMPLETED' ? 'bg-gray-100 text-gray-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {activity.status === 'PLANNED' && 'Запланировано'}
+                  {activity.status === 'CONFIRMED' && 'Подтверждено'}
+                  {activity.status === 'IN_PROGRESS' && 'В процессе'}
+                  {activity.status === 'COMPLETED' && 'Завершено'}
+                  {activity.status === 'CANCELLED' && 'Отменено'}
+                </span>
+              </div>
 
-      {showEditModal && (
-        <EditVacationModal
-          vacation={vacation}
-          onSubmit={handleEditVacation}
-          onCancel={() => setShowEditModal(false)}
-          isLoading={isLoading}
-        />
-      )}
-    </div>
-  );
-}
-
-// Компонент модального окна редактирования отпуска
-function EditVacationModal({ vacation, onSubmit, onCancel, isLoading }) {
-  const [formData, setFormData] = useState({
-    title: vacation.title,
-    description: vacation.description || '',
-    destination: vacation.destination || '',
-    startDate: vacation.startDate.split('T')[0],
-    endDate: vacation.endDate.split('T')[0],
-    coverImage: vacation.coverImage || '',
-    isPublic: vacation.isPublic || false
-  });
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Валидация
-    if (!formData.title.trim()) {
-      alert('Название отпуска обязательно');
-      return;
-    }
-    
-    if (!formData.startDate || !formData.endDate) {
-      alert('Даты начала и окончания обязательны');
-      return;
-    }
-    
-    if (new Date(formData.startDate) > new Date(formData.endDate)) {
-      alert('Дата начала не может быть позже даты окончания');
-      return;
-    }
-    
-    onSubmit(formData);
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
-    }));
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold text-gray-900">Редактировать отпуск</h2>
-          <button
-            onClick={onCancel}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-            disabled={isLoading}
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Название отпуска *
-            </label>
-            <input
-              type="text"
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Название вашего отпуска"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Место назначения
-            </label>
-            <input
-              type="text"
-              name="destination"
-              value={formData.destination}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Куда едете?"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Описание
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="Описание отпуска..."
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Начало *
-              </label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Конец *
-              </label>
-              <input
-                type="date"
-                name="endDate"
-                value={formData.endDate}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL обложки
-            </label>
-            <input
-              type="url"
-              name="coverImage"
-              value={formData.coverImage}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="isPublic"
-              checked={formData.isPublic}
-              onChange={handleChange}
-              className="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
-            />
-            <label className="ml-2 text-sm text-gray-700">
-              Сделать отпуск публичным
-            </label>
-          </div>
-
-          <div className="flex space-x-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isLoading}
-              className="flex-1 px-6 py-3 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition duration-200 disabled:opacity-50"
-            >
-              Отмена
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="flex-1 px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-t-2 border-white rounded-full animate-spin"></div>
-                  <span>Сохранение...</span>
-                </>
-              ) : (
-                <span>Сохранить</span>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-
-
-================================================================================
-ФАЙЛ: VacationTimer.js
-ПОЛНЫЙ ПУТЬ: src/components/vacation/VacationTimer.js
-РАЗМЕР: 5445 символов
-================================================================================
-
-// components/vacation/VacationTimer.js
-'use client';
-
-import { useState, useEffect } from 'react';
-
-export default function VacationTimer({ vacation }) {
-  const [timeLeft, setTimeLeft] = useState({
-    status: 'upcoming',
-    days: 0,
-    hours: 0,
-    minutes: 0
-  });
-
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const startDate = new Date(vacation.startDate);
-      const endDate = new Date(vacation.endDate);
-      
-      if (now < startDate) {
-        const diff = startDate - now;
-        return {
-          status: 'upcoming',
-          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        };
-      } else if (now <= endDate) {
-        const diff = endDate - now;
-        return {
-          status: 'current',
-          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-        };
-      } else {
-        return {
-          status: 'past',
-          days: 0,
-          hours: 0,
-          minutes: 0
-        };
-      }
-    };
-
-    setTimeLeft(calculateTimeLeft());
-    
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 60000);
-
-    return () => clearInterval(timer);
-  }, [vacation]);
-
-  const getStatusConfig = () => {
-    switch (timeLeft.status) {
-      case 'upcoming':
-        return {
-          title: 'До начала отпуска',
-          gradient: 'from-blue-500 to-cyan-500',
-          emoji: '🛩️',
-          description: 'Скоро начнется ваше путешествие!'
-        };
-      case 'current':
-        return {
-          title: 'До конца отпуска',
-          gradient: 'from-green-500 to-emerald-500',
-          emoji: '🎉',
-          description: 'Наслаждайтесь каждым моментом!'
-        };
-      case 'past':
-        return {
-          title: 'Отпуск завершен',
-          gradient: 'from-purple-500 to-pink-500',
-          emoji: '🏆',
-          description: 'Надеемся, вам понравилось путешествие!'
-        };
-      default:
-        return {
-          title: 'Отпуск',
-          gradient: 'from-gray-500 to-gray-600',
-          emoji: '📅',
-          description: ''
-        };
-    }
-  };
-
-  const config = getStatusConfig();
-
-  const getDaysText = (days) => {
-    const lastDigit = days % 10;
-    const lastTwoDigits = days % 100;
-    
-    if (lastTwoDigits >= 11 && lastTwoDigits <= 14) {
-      return 'дней';
-    }
-    
-    if (lastDigit === 1) {
-      return 'день';
-    }
-    
-    if (lastDigit >= 2 && lastDigit <= 4) {
-      return 'дня';
-    }
-    
-    return 'дней';
-  };
-
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6">
-      <div className="text-center">
-        <div className={`bg-gradient-to-r ${config.gradient} text-white rounded-2xl p-8 max-w-md mx-auto shadow-xl`}>
-          <div className="text-4xl mb-4 transform hover:scale-110 transition-transform duration-300">
-            {config.emoji}
-          </div>
-          
-          <h2 className="text-2xl font-bold mb-2 drop-shadow-sm">{config.title}</h2>
-          <p className="text-white/80 mb-6 text-sm">{config.description}</p>
-          
-          {timeLeft.status !== 'past' ? (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <div className="flex justify-center space-x-6">
-                <div className="text-center">
-                  <div className="text-4xl font-bold drop-shadow-md">{timeLeft.days}</div>
-                  <div className="text-sm opacity-90 mt-1">{getDaysText(timeLeft.days)}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold drop-shadow-md">{timeLeft.hours}</div>
-                  <div className="text-sm opacity-90 mt-1">часов</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold drop-shadow-md">{timeLeft.minutes}</div>
-                  <div className="text-sm opacity-90 mt-1">мин</div>
-                </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Приоритет</h4>
+                <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                  activity.priority === 'LOW' ? 'bg-red-100 text-red-800' :
+                  activity.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-green-100 text-green-800'
+                }`}>
+                  {activity.priority === 'LOW' && 'Низкий'}
+                  {activity.priority === 'MEDIUM' && 'Средний'}
+                  {activity.priority === 'HIGH' && 'Высокий'}
+                </span>
               </div>
             </div>
-          ) : (
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-              <p className="text-lg font-semibold">Время создавать воспоминания!</p>
-              <p className="text-sm opacity-90 mt-2">Поделитесь фотографиями и впечатлениями</p>
-            </div>
-          )}
-          
-          <div className="mt-6 pt-4 border-t border-white/20">
-            <div className="text-sm opacity-80">
-              {new Date(vacation.startDate).toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-              })} - {new Date(vacation.endDate).toLocaleDateString('ru-RU', { 
-                day: 'numeric', 
-                month: 'long', 
-                year: 'numeric' 
-              })}
-            </div>
-            {vacation.destination && (
-              <div className="text-sm opacity-80 mt-1 flex items-center justify-center">
-                <span className="mr-1">📍</span>
-                {vacation.destination}
+
+            {activity.cost && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Стоимость</h4>
+                <p className="text-lg font-semibold text-gray-900">
+                  {parseFloat(activity.cost).toFixed(2)} ₽
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-gray-900">Детали</h3>
+            
+            {activity.location && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Местоположение</h4>
+                <LocationCard location={activity.location} />
+              </div>
+            )}
+
+            {activity.notes && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Заметки</h4>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-gray-600 text-sm">{activity.notes}</p>
+                </div>
               </div>
             )}
           </div>
@@ -2974,5 +621,304 @@ export default function VacationTimer({ vacation }) {
     </div>
   );
 }
+
+
+
+================================================================================
+ФАЙЛ: ActivityParticipantsTab.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ActivityParticipantsTab.js
+РАЗМЕР: 5033 символов
+================================================================================
+
+import ParticipationButton from './ParticipationButton';
+
+export default function ActivityParticipantsTab({ 
+  activity, 
+  userParticipation, 
+  onParticipation, 
+  isParticipationLoading 
+}) {
+  const goingParticipants = activity?.participants?.filter(p => p.status === 'GOING') || [];
+  const notGoingParticipants = activity?.participants?.filter(p => p.status === 'NOT_GOING') || [];
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold text-gray-900">
+          Участники ({activity.participants?.length || 0})
+        </h3>
+        
+        <div className="flex items-center space-x-3">
+          <ParticipationButton
+            userParticipation={userParticipation}
+            onParticipation={onParticipation}
+            isLoading={isParticipationLoading}
+            showLabel={true}
+          />
+        </div>
+      </div>
+      
+      {activity.participants && activity.participants.length > 0 ? (
+        <div className="space-y-4">
+          {goingParticipants.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">
+                Участвуют ({goingParticipants.length})
+              </h4>
+              <div className="space-y-2">
+                {goingParticipants.map((participant) => (
+                  <div key={participant.id} className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white font-medium">
+                        {participant.user.avatar ? (
+                          <img
+                            src={participant.user.avatar}
+                            alt={participant.user.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          participant.user.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{participant.user.name}</div>
+                        <div className="text-sm text-gray-500">@{participant.user.usertag}</div>
+                      </div>
+                    </div>
+                    <span className="text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs">
+                      Участвует
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {notGoingParticipants.length > 0 && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">
+                Не участвуют ({notGoingParticipants.length})
+              </h4>
+              <div className="space-y-2">
+                {notGoingParticipants.map((participant) => (
+                  <div key={participant.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-gray-600 font-medium">
+                        {participant.user.avatar ? (
+                          <img
+                            src={participant.user.avatar}
+                            alt={participant.user.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          participant.user.name.charAt(0).toUpperCase()
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{participant.user.name}</div>
+                        <div className="text-sm text-gray-500">@{participant.user.usertag}</div>
+                      </div>
+                    </div>
+                    <span className="text-gray-600 bg-gray-200 px-2 py-1 rounded-full text-xs">
+                      Не участвует
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="text-center py-12 text-gray-500">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">👥</span>
+          </div>
+          <p className="mb-4">Пока нет участников</p>
+          <button
+            onClick={() => onParticipation(true)}
+            disabled={isParticipationLoading}
+            className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition duration-200 font-medium"
+          >
+            Стать первым участником
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: ActivityTabs.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ActivityTabs.js
+РАЗМЕР: 1773 символов
+================================================================================
+
+// src/components/activities/ActivityTabs.js
+export default function ActivityTabs({ 
+  activeTab, 
+  onTabChange, 
+  activity, 
+  canEdit 
+}) {
+  const tabs = [
+    { id: 'info', label: 'Информация', icon: 'ℹ️' },
+    { id: 'gallery', label: 'Фотографии', icon: '📸' },
+    { id: 'participants', label: 'Участники', icon: '👥' },
+    ...(canEdit ? [{ id: 'edit', label: 'Редактировать', icon: '✏️' }] : [])
+  ];
+
+  return (
+    <div className="border-t border-gray-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav className="flex space-x-1 -mb-px overflow-x-auto">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors flex items-center space-x-2 ${
+                activeTab === tab.id
+                  ? 'border-emerald-500 text-emerald-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <span className="text-base">{tab.icon}</span>
+              <span>{tab.label}</span>
+              {tab.id === 'gallery' && activity.memories && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                  {activity.memories.length}
+                </span>
+              )}
+              {tab.id === 'participants' && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                  {activity.participants?.filter(p => p.status === 'GOING').length || 0}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: LocationCard.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/LocationCard.js
+РАЗМЕР: 2216 символов
+================================================================================
+
+export default function LocationCard({ location }) {
+  const openInYandexMaps = (address) => {
+    if (!address) return;
+    
+    const query = encodeURIComponent(address);
+    const url = `https://yandex.ru/maps/?text=${query}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  if (!location) return null;
+
+  return (
+    <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+      <div className="flex items-start space-x-3">
+        <div className="flex-shrink-0 w-5 h-5 text-gray-400 mt-0.5">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-900 font-medium text-sm">{location.name}</p>
+          {location.address && (
+            <div className="mt-1">
+              <p className="text-gray-600 text-sm mb-2">{location.address}</p>
+              <button
+                onClick={() => openInYandexMaps(location.address)}
+                className="inline-flex items-center space-x-1.5 text-emerald-600 hover:text-emerald-700 transition-colors text-xs font-medium bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1.5 rounded-lg border border-emerald-200"
+                title="Открыть в Яндекс Картах"
+              >
+                <span>Открыть в Яндекс Картах</span>
+                <svg 
+                  className="w-3.5 h-3.5" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: ParticipationButton.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/ParticipationButton.js
+РАЗМЕР: 963 символов
+================================================================================
+
+export default function ParticipationButton({ 
+  userParticipation, 
+  onParticipation, 
+  isLoading,
+  showLabel = true 
+}) {
+  const isGoing = userParticipation?.status === 'GOING';
+
+  return (
+    <button
+      onClick={() => onParticipation(!isGoing)}
+      disabled={isLoading}
+      className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 disabled:opacity-50 text-sm font-medium shadow-sm ${
+        isGoing 
+          ? 'bg-emerald-500 text-white hover:bg-emerald-600' 
+          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      {isLoading ? (
+        <div className={`w-4 h-4 border-t-2 rounded-full animate-spin ${
+          isGoing ? 'border-white' : 'border-gray-600'
+        }`}></div>
+      ) : (
+        <>
+          <span className="text-base">{isGoing ? '✅' : '➕'}</span>
+          {showLabel && <span>{isGoing ? 'Я участвую' : 'Участвовать'}</span>}
+        </>
+      )}
+    </button>
+  );
+}
+
+
+
+================================================================================
+ФАЙЛ: index.js
+ПОЛНЫЙ ПУТЬ: src/components/activities/index.js
+РАЗМЕР: 528 символов
+================================================================================
+
+export { default as ActivityHeader } from './ActivityHeader';
+export { default as ActivityTabs } from './ActivityTabs';
+export { default as ActivityInfoTab } from './ActivityInfoTab';
+export { default as ActivityGalleryTab } from './ActivityGalleryTab';
+export { default as ActivityParticipantsTab } from './ActivityParticipantsTab';
+export { default as ActivityEditTab } from './ActivityEditTab';
+export { default as ParticipationButton } from './ParticipationButton';
+export { default as LocationCard } from './LocationCard';
 
 

@@ -1,7 +1,9 @@
+// src/app/layout.js
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '../contexts/AuthContext';
 import LayoutWrapper from '../components/LayoutWrapper';
+import ToastProvider from '../components/ToastProvider'; // Импорт
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Breezeway - Бесплатная платформа для планирования отпусков",
-  description: "Планируйте отпуска вместе с друзьями бесплатно. Создавайте маршруты, делитесь воспоминаниями и находите попутчиков.",
+  description: "Планируйте отпуска вместе с друзьями бесплатно.",
 };
 
 export default function RootLayout({ children }) {
@@ -24,6 +26,7 @@ export default function RootLayout({ children }) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <AuthProvider>
           <LayoutWrapper>{children}</LayoutWrapper>
+          <ToastProvider /> {/* Клиентский компонент — здесь */}
         </AuthProvider>
       </body>
     </html>

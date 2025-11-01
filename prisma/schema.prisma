@@ -71,7 +71,6 @@ enum ActivityPriority {
 
 enum ParticipantStatus {
   GOING
-  MAYBE
   NOT_GOING
 }
 
@@ -250,24 +249,28 @@ model Location {
   @@map("locations")
 }
 
+// schema.prisma
 model Activity {
-  id           String               @id @default(cuid())
-  title        String
-  description  String?
-  date         DateTime
-  createdAt    DateTime             @default(now())
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  date        DateTime
+  type        ActivityType
+  status      ActivityStatus @default(PLANNED)
+  priority    ActivityPriority @default(MEDIUM)
+  startTime   String?
+  endTime     String?
+  cost        Float?
+  notes       String?
+  bannerImage String?  // ← ДОБАВЬТЕ ЭТО ПОЛЕ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
   vacationId   String
-  cost         Decimal?
-  endTime      String?
+  vacation     Vacation @relation(fields: [vacationId], references: [id], onDelete: Cascade)
   locationId   String?
-  notes        String?
-  priority     ActivityPriority     @default(MEDIUM)
-  startTime    String?
-  status       ActivityStatus       @default(PLANNED)
-  type         ActivityType
-  updatedAt    DateTime             @updatedAt
-  location     Location?            @relation(fields: [locationId], references: [id])
-  vacation     Vacation             @relation(fields: [vacationId], references: [id], onDelete: Cascade)
+  location     Location? @relation(fields: [locationId], references: [id])
   participants ActivityParticipant[]
   memories     Memory[]
 
